@@ -14,6 +14,7 @@ import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import UnauthorizedPage from "./pages/UnauthorizedPage";
 import NotFound from "./pages/NotFound";
+import LoanApplicationPage from "./components/loans/LoanApplicationPage";
 
 // Create a new QueryClient instance outside of the component
 const queryClient = new QueryClient();
@@ -38,7 +39,11 @@ const App: React.FC = () => {
                 {/* Protected farmer routes */}
                 <Route path="/dashboard" element={<MainLayout requiredRole="farmer" />}>
                   <Route index element={<DashboardPage />} />
-                  {/* Add more farmer-specific routes here */}
+                  <Route path="/dashboard/loan-applications/new" element={<LoanApplicationPage />} />
+                </Route>
+                
+                <Route path="/loan-applications/new" element={<MainLayout requiredRole="farmer" />}>
+                  <Route index element={<LoanApplicationPage />} />
                 </Route>
                 
                 {/* Protected admin routes */}

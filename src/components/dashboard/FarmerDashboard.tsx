@@ -1,7 +1,9 @@
 
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CreditCard, BarChart, ArrowUp, CalendarDays } from "lucide-react";
+import { CreditCard, BarChart, ArrowUp, CalendarDays, FileText, PlusCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import StatCard from "./StatCard";
 import ApplicationItem from "./ApplicationItem";
 import CreditCardDisplay from "./CreditCardDisplay";
@@ -53,11 +55,19 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ userName }) => {
       
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="col-span-4">
-          <CardHeader>
-            <CardTitle>Recent Applications</CardTitle>
-            <CardDescription>
-              Your recent loan applications and their status
-            </CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Recent Applications</CardTitle>
+              <CardDescription>
+                Your recent loan applications and their status
+              </CardDescription>
+            </div>
+            <Button variant="outline" asChild className="ml-auto">
+              <Link to="/loan-applications/new">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                New Application
+              </Link>
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -107,6 +117,33 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ userName }) => {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <FileText className="mr-2 h-5 w-5" />
+            Apply for Loans
+          </CardTitle>
+          <CardDescription>
+            Need financial assistance? Apply for various agricultural loans tailored for you
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col md:flex-row gap-4">
+            <Button className="flex-1" asChild>
+              <Link to="/loan-applications/new">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                New Loan Application
+              </Link>
+            </Button>
+            <Button variant="outline" className="flex-1" asChild>
+              <Link to="/loan-applications">
+                View All Applications
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
