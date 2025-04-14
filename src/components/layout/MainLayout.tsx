@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Outlet, Navigate } from "react-router-dom";
+import { Outlet, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
@@ -11,6 +11,7 @@ interface MainLayoutProps {
 
 const MainLayout: React.FC<MainLayoutProps> = ({ requiredRole }) => {
   const { user, isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
 
   // Show loading state
   if (isLoading) {
@@ -23,12 +24,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRole }) => {
 
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
   // Check if user has required role
   if (requiredRole && user?.role !== requiredRole) {
-    return <Navigate to="/unauthorized" replace />;
+    return <Navigate to="/unauthorized" state={{ from: location.pathname }} replace />;
   }
 
   return (

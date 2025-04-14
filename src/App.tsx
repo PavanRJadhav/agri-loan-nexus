@@ -39,23 +39,67 @@ const App: React.FC = () => {
                 {/* Protected farmer routes */}
                 <Route path="/dashboard" element={<MainLayout requiredRole="farmer" />}>
                   <Route index element={<DashboardPage />} />
-                  <Route path="/dashboard/loan-applications/new" element={<LoanApplicationPage />} />
                 </Route>
                 
-                <Route path="/loan-applications/new" element={<MainLayout requiredRole="farmer" />}>
-                  <Route index element={<LoanApplicationPage />} />
+                {/* Loan application routes */}
+                <Route path="/loan-applications" element={<MainLayout requiredRole="farmer" />}>
+                  <Route index element={<Navigate to="/dashboard" replace />} />
+                  <Route path="new" element={<LoanApplicationPage />} />
+                </Route>
+                
+                {/* Credit card routes */}
+                <Route path="/credit-cards" element={<MainLayout requiredRole="farmer" />}>
+                  <Route index element={<Navigate to="/dashboard" replace />} />
+                </Route>
+                
+                {/* Transactions routes */}
+                <Route path="/transactions" element={<MainLayout requiredRole="farmer" />}>
+                  <Route index element={<Navigate to="/dashboard" replace />} />
+                </Route>
+                
+                {/* Support routes */}
+                <Route path="/support" element={<MainLayout requiredRole="farmer" />}>
+                  <Route index element={<Navigate to="/dashboard" replace />} />
+                </Route>
+                
+                {/* Settings routes */}
+                <Route path="/settings" element={<MainLayout requiredRole="farmer" />}>
+                  <Route index element={<Navigate to="/dashboard" replace />} />
                 </Route>
                 
                 {/* Protected admin routes */}
                 <Route path="/admin" element={<MainLayout requiredRole="admin" />}>
                   <Route index element={<Navigate to="/dashboard" replace />} />
-                  {/* Add more admin-specific routes here */}
+                </Route>
+                
+                {/* All applications routes for admin */}
+                <Route path="/all-applications" element={<MainLayout requiredRole="admin" />}>
+                  <Route index element={<Navigate to="/dashboard" replace />} />
+                </Route>
+                
+                {/* User management routes for admin */}
+                <Route path="/users" element={<MainLayout requiredRole="admin" />}>
+                  <Route index element={<Navigate to="/dashboard" replace />} />
+                </Route>
+                
+                {/* Analytics routes for admin */}
+                <Route path="/analytics" element={<MainLayout requiredRole="admin" />}>
+                  <Route index element={<Navigate to="/dashboard" replace />} />
                 </Route>
                 
                 {/* Protected verifier routes */}
                 <Route path="/verifier" element={<MainLayout requiredRole="verifier" />}>
                   <Route index element={<Navigate to="/dashboard" replace />} />
-                  {/* Add more verifier-specific routes here */}
+                </Route>
+                
+                {/* Verify applications routes for verifier */}
+                <Route path="/verify-applications" element={<MainLayout requiredRole="verifier" />}>
+                  <Route index element={<Navigate to="/dashboard" replace />} />
+                </Route>
+                
+                {/* Partners routes for verifier */}
+                <Route path="/partners" element={<MainLayout requiredRole="verifier" />}>
+                  <Route index element={<Navigate to="/dashboard" replace />} />
                 </Route>
                 
                 {/* Catch-all route */}

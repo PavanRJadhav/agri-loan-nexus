@@ -1,12 +1,17 @@
 
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { ShieldAlert } from "lucide-react";
 
 const UnauthorizedPage: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  
+  const handleReturnToDashboard = () => {
+    navigate("/dashboard");
+  };
   
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -19,11 +24,12 @@ const UnauthorizedPage: React.FC = () => {
           You don't have permission to access this page.
         </p>
         <div className="space-y-2">
-          <Link to="/dashboard">
-            <Button className="bg-agriloan-primary hover:bg-agriloan-secondary w-full">
-              Return to Dashboard
-            </Button>
-          </Link>
+          <Button 
+            onClick={handleReturnToDashboard} 
+            className="bg-agriloan-primary hover:bg-agriloan-secondary w-full"
+          >
+            Return to Dashboard
+          </Button>
           {user && (
             <p className="text-sm text-gray-500 mt-4">
               Logged in as {user.name} ({user.role}).

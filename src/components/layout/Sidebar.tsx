@@ -25,7 +25,7 @@ const Sidebar: React.FC = () => {
     ];
     
     const farmerLinks = [
-      { name: "Loan Applications", icon: FileText, path: "/loan-applications" },
+      { name: "Loan Applications", icon: FileText, path: "/loan-applications/new" },
       { name: "Credit Cards", icon: CreditCard, path: "/credit-cards" },
       { name: "Transactions", icon: PieChart, path: "/transactions" },
       { name: "Support Chat", icon: MessageSquare, path: "/support" },
