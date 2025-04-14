@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,15 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// AgriLoan Nexus theme colors
+				agriloan: {
+					'primary': '#2E7D32',
+					'secondary': '#558B2F',
+					'accent': '#FF8F00',
+					'light': '#F5F5F5',
+					'dark': '#424242',
+					'white': '#FFFFFF'
 				}
 			},
 			borderRadius: {
