@@ -15,6 +15,11 @@ import DashboardPage from "./pages/DashboardPage";
 import UnauthorizedPage from "./pages/UnauthorizedPage";
 import NotFound from "./pages/NotFound";
 import LoanApplicationPage from "./components/loans/LoanApplicationPage";
+import CreditCardsPage from "./pages/CreditCardsPage";
+import TransactionsPage from "./pages/TransactionsPage";
+import SupportChatPage from "./pages/SupportChatPage";
+import SettingsPage from "./pages/SettingsPage";
+import ProfilePage from "./pages/ProfilePage";
 
 // Create a new QueryClient instance outside of the component
 const queryClient = new QueryClient();
@@ -49,22 +54,27 @@ const App: React.FC = () => {
                 
                 {/* Credit card routes */}
                 <Route path="/credit-cards" element={<MainLayout requiredRole="farmer" />}>
-                  <Route index element={<Navigate to="/dashboard" replace />} />
+                  <Route index element={<CreditCardsPage />} />
                 </Route>
                 
                 {/* Transactions routes */}
                 <Route path="/transactions" element={<MainLayout requiredRole="farmer" />}>
-                  <Route index element={<Navigate to="/dashboard" replace />} />
+                  <Route index element={<TransactionsPage />} />
                 </Route>
                 
                 {/* Support routes */}
                 <Route path="/support" element={<MainLayout requiredRole="farmer" />}>
-                  <Route index element={<Navigate to="/dashboard" replace />} />
+                  <Route index element={<SupportChatPage />} />
                 </Route>
                 
                 {/* Settings routes */}
                 <Route path="/settings" element={<MainLayout requiredRole="farmer" />}>
-                  <Route index element={<Navigate to="/dashboard" replace />} />
+                  <Route index element={<SettingsPage />} />
+                </Route>
+                
+                {/* Profile routes */}
+                <Route path="/profile" element={<MainLayout requiredRole="farmer" />}>
+                  <Route index element={<ProfilePage />} />
                 </Route>
                 
                 {/* Protected admin routes */}

@@ -12,7 +12,8 @@ import {
   Settings,
   UserCheck,
   Building,
-  BarChart4
+  BarChart4,
+  User
 } from "lucide-react";
 
 const Sidebar: React.FC = () => {
@@ -42,14 +43,18 @@ const Sidebar: React.FC = () => {
       { name: "Lending Partners", icon: Building, path: "/partners" },
     ];
     
-    const settingsLink = { name: "Settings", icon: Settings, path: "/settings" };
+    // Add profile and settings links for all user roles
+    const profileSettingsLinks = [
+      { name: "My Profile", icon: User, path: "/profile" },
+      { name: "Settings", icon: Settings, path: "/settings" }
+    ];
     
     if (user?.role === "farmer") {
-      return [...commonLinks, ...farmerLinks, settingsLink];
+      return [...commonLinks, ...farmerLinks, ...profileSettingsLinks];
     } else if (user?.role === "admin") {
-      return [...commonLinks, ...adminLinks, settingsLink];
+      return [...commonLinks, ...adminLinks, ...profileSettingsLinks];
     } else if (user?.role === "verifier") {
-      return [...commonLinks, ...verifierLinks, settingsLink];
+      return [...commonLinks, ...verifierLinks, ...profileSettingsLinks];
     }
     
     return commonLinks;

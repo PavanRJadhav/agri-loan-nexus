@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { ShieldAlert } from "lucide-react";
@@ -8,9 +8,15 @@ import { ShieldAlert } from "lucide-react";
 const UnauthorizedPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   
+  // Determine where to redirect the user based on their role
   const handleReturnToDashboard = () => {
-    navigate("/dashboard");
+    if (user) {
+      navigate("/dashboard");
+    } else {
+      navigate("/login");
+    }
   };
   
   return (
