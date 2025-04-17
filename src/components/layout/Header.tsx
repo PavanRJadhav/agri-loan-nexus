@@ -1,6 +1,5 @@
-
 import React, { useState, useRef, useEffect } from "react";
-import { Bell, Search, Menu, User } from "lucide-react";
+import { Bell, Search, Menu, User, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -23,7 +22,6 @@ const Header: React.FC = () => {
   const notificationRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
-  // Handle clicking outside to close notifications panel
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
