@@ -31,6 +31,27 @@ const ProfileDetails: React.FC = () => {
     return sources[source] || source;
   };
 
+  // Calculate total income and expenses from transactions
+  const calculateFinancialSummary = () => {
+    if (!user.transactions || user.transactions.length === 0) {
+      return { totalIncome: 0, totalExpenses: 0 };
+    }
+    
+    return user.transactions.reduce(
+      (acc, transaction) => {
+        if (["deposit", "disbursement"].includes(transaction.type)) {
+          acc.totalIncome += transaction.amount;
+        } else {
+          acc.totalExpenses += Math.abs(transaction.amount);
+        }
+        return acc;
+      },
+      { totalIncome: 0, totalExpenses: 0 }
+    );
+  };
+
+  const { totalIncome, totalExpenses } = calculateFinancialSummary();
+
   return (
     <div className="space-y-6">
       <Card>
@@ -104,6 +125,27 @@ const ProfileDetails: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {user.transactions && user.transactions.length > 0 && (
+              <>
+                <Separator />
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground">Total Income</h4>
+                    <p className="text-lg font-medium text-green-600">
+                      {formatCurrency(totalIncome)}
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground">Total Expenses</h4>
+                    <p className="text-lg font-medium text-red-600">
+                      {formatCurrency(totalExpenses)}
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       )}

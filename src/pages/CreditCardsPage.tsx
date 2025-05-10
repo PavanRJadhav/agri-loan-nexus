@@ -2,16 +2,43 @@
 import React from "react";
 import CreditCardDisplay from "@/components/dashboard/CreditCardDisplay";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/contexts/AuthContext";
+import { FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const CreditCardsPage: React.FC = () => {
-  // Mock data for credit card - in a real app, this would come from an API
+  const { user } = useAuth();
+  
+  // Get transactions from user context
+  const transactions = user?.transactions || [];
+  
+  // Filter for just credit card related transactions
+  const cardTransactions = transactions.filter(transaction => 
+    transaction.type === "payment" || transaction.type === "disbursement"
+  );
+
+  // Sort by date (newest first)
+  const recentCardTransactions = [...cardTransactions].sort((a, b) => 
+    new Date(b.date).getTime() - new Date(a.date).getTime()
+  ).slice(0, 3);
+  
+  // Format transaction date
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+  
+  // Credit card data
   const creditCardData = {
-    name: "Rajesh Kumar",
+    name: user?.name || "Unknown",
     cardNumber: "**** **** **** 4582",
     validUntil: "09/28",
-    availableCredit: "₹40,000",
+    availableCredit: user?.financialData?.currentBalance ? 
+      `₹${user.financialData.currentBalance.toLocaleString()}` : "₹0",
     creditLimit: "₹50,000",
-    percentAvailable: 80
+    percentAvailable: user?.financialData?.currentBalance ? 
+      Math.min(100, Math.round((user.financialData.currentBalance / 50000) * 100)) : 0
   };
 
   return (
@@ -40,29 +67,30 @@ const CreditCardsPage: React.FC = () => {
             <CardDescription>Last 30 days of card activity</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center border-b pb-2">
-                <div>
-                  <p className="font-medium">Farm Equipment Store</p>
-                  <p className="text-sm text-muted-foreground">Apr 10, 2025</p>
-                </div>
-                <span className="text-red-500 font-medium">-₹5,000</span>
+            {recentCardTransactions.length > 0 ? (
+              <div className="space-y-4">
+                {recentCardTransactions.map((transaction) => (
+                  <div key={transaction.id} className="flex justify-between items-center border-b pb-2">
+                    <div>
+                      <p className="font-medium">{transaction.description}</p>
+                      <p className="text-sm text-muted-foreground">{formatDate(transaction.date)}</p>
+                    </div>
+                    <span className={transaction.amount > 0 ? "text-green-500 font-medium" : "text-red-500 font-medium"}>
+                      {transaction.amount > 0 ? `+₹${transaction.amount.toLocaleString()}` : `-₹${Math.abs(transaction.amount).toLocaleString()}`}
+                    </span>
+                  </div>
+                ))}
               </div>
-              <div className="flex justify-between items-center border-b pb-2">
-                <div>
-                  <p className="font-medium">Agricultural Supplies</p>
-                  <p className="text-sm text-muted-foreground">Apr 5, 2025</p>
-                </div>
-                <span className="text-red-500 font-medium">-₹3,200</span>
+            ) : (
+              <div className="text-center py-8 space-y-3">
+                <FileText className="h-12 w-12 mx-auto text-gray-300" />
+                <p className="text-muted-foreground">No transaction history yet</p>
+                <p className="text-sm text-muted-foreground">Your credit card transactions will appear here</p>
+                <Button variant="outline" asChild className="mt-2">
+                  <Link to="/loan-applications/new">Apply For Credit</Link>
+                </Button>
               </div>
-              <div className="flex justify-between items-center border-b pb-2">
-                <div>
-                  <p className="font-medium">Credit Repayment</p>
-                  <p className="text-sm text-muted-foreground">Apr 1, 2025</p>
-                </div>
-                <span className="text-green-500 font-medium">+₹2,000</span>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
