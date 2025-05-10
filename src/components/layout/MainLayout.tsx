@@ -29,10 +29,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRole }) => {
 
   // Check if user has required role - only restrict if requiredRole is specified
   if (requiredRole && user?.role !== requiredRole) {
-    // For admin and verifier, they should have access to their specific dashboards
+    // For admin and verifier, they can access their own specific pages
+    // But farmers can only access farmer pages
+    if (user?.role === "farmer" || 
+        !["admin", "verifier"].includes(user?.role)) {
+      return <Navigate to="/unauthorized" state={{ from: location.pathname }} replace />;
+    }
+    
+    // If here, user is either admin or verifier, allow cross-access to their pages
     if ((user?.role === "admin" || user?.role === "verifier") && 
         (requiredRole === "admin" || requiredRole === "verifier")) {
-      // Allow access between admin and verifier roles
       return (
         <div className="flex h-screen bg-gray-50">
           <Sidebar />
@@ -45,8 +51,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRole }) => {
         </div>
       );
     }
-    
-    return <Navigate to="/unauthorized" state={{ from: location.pathname }} replace />;
   }
 
   return (

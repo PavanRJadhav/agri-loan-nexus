@@ -22,6 +22,9 @@ import SettingsPage from "./pages/SettingsPage";
 import ProfilePage from "./pages/ProfilePage";
 import LoanVerificationPage from "./pages/LoanVerificationPage";
 import AllApplicationsPage from "./pages/AllApplicationsPage";
+import UsersManagementPage from "./pages/UsersManagementPage";
+import AnalyticsPage from "./pages/AnalyticsPage";
+import LendingPartnersPage from "./pages/LendingPartnersPage";
 
 // Create a new QueryClient instance outside of the component
 const queryClient = new QueryClient();
@@ -81,11 +84,11 @@ const App: React.FC = () => {
                 </Route>
                 
                 <Route path="/users" element={<MainLayout requiredRole="admin" />}>
-                  <Route index element={<Navigate to="/dashboard" replace />} />
+                  <Route index element={<UsersManagementPage />} />
                 </Route>
                 
                 <Route path="/analytics" element={<MainLayout requiredRole="admin" />}>
-                  <Route index element={<Navigate to="/dashboard" replace />} />
+                  <Route index element={<AnalyticsPage />} />
                 </Route>
                 
                 {/* Protected verifier routes */}
@@ -94,7 +97,7 @@ const App: React.FC = () => {
                 </Route>
                 
                 <Route path="/partners" element={<MainLayout requiredRole="verifier" />}>
-                  <Route index element={<Navigate to="/dashboard" replace />} />
+                  <Route index element={<LendingPartnersPage />} />
                 </Route>
                 
                 {/* Catch-all route */}

@@ -4,8 +4,31 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { CreditCard, BarChart, ArrowDown, Users } from "lucide-react";
 import StatCard from "./StatCard";
 import ApplicationItem from "./ApplicationItem";
+import { useAuth } from "@/contexts/AuthContext";
 
 const VerifierDashboard: React.FC = () => {
+  const { user } = useAuth();
+  
+  // Sample applications awaiting verification
+  const pendingApplications = [
+    { id: 10241, type: "Crop Loan", amount: "₹15,000", applicantInitial: "AD", date: "2 days ago" },
+    { id: 10242, type: "Equipment Purchase", amount: "₹25,000", applicantInitial: "BD", date: "1 day ago" },
+    { id: 10243, type: "Irrigation System", amount: "₹50,000", applicantInitial: "CD", date: "12 hours ago" },
+    { id: 10244, type: "Seed Purchase", amount: "₹8,000", applicantInitial: "DD", date: "4 hours ago" }
+  ];
+
+  // Calculate pending urgent applications (>48h)
+  const urgentCount = 3;
+  
+  // Statistics for today's verifications
+  const verifiedToday = 8;
+  const approvedToday = 6;
+  const rejectedToday = 2;
+  
+  // Calculate average verification time
+  const avgTime = "1.8 hrs";
+  const timeChange = "-20 mins";
+
   return (
     <div className="space-y-6">
       <div>
@@ -18,22 +41,22 @@ const VerifierDashboard: React.FC = () => {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Pending Verification"
-          value="12"
-          description="3 urgent (>48h)"
+          value={pendingApplications.length.toString()}
+          description={`${urgentCount} urgent (>48h)`}
           icon={CreditCard}
         />
         
         <StatCard
           title="Verified Today"
-          value="8"
-          description="6 approved, 2 rejected"
+          value={verifiedToday.toString()}
+          description={`${approvedToday} approved, ${rejectedToday} rejected`}
           icon={BarChart}
         />
         
         <StatCard
           title="Average Time"
-          value="1.8 hrs"
-          description="-20 mins from yesterday"
+          value={avgTime}
+          description={`${timeChange} from yesterday`}
           icon={ArrowDown}
           descriptionColor="text-green-600"
         />
@@ -56,23 +79,18 @@ const VerifierDashboard: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {[
-                { type: "Crop Loan", amount: "₹15,000" },
-                { type: "Equipment Purchase", amount: "₹25,000" },
-                { type: "Irrigation System", amount: "₹50,000" },
-                { type: "Seed Purchase", amount: "₹8,000" }
-              ].map((item, i) => (
+              {pendingApplications.map((item, i) => (
                 <ApplicationItem
-                  key={i}
-                  id={10240 + i + 1}
-                  title={`Application #${10240 + i + 1}`}
-                  date=""
+                  key={item.id}
+                  id={item.id}
+                  title={`Application #${item.id}`}
+                  date={`Submitted ${item.date}`}
                   status="Awaiting verification"
-                  statusColor=""
+                  statusColor="bg-yellow-100 text-yellow-800"
                   showActions={true}
                   amount={item.amount}
                   type={item.type}
-                  applicantInitial={`${String.fromCharCode(65 + i)}D`}
+                  applicantInitial={item.applicantInitial}
                 />
               ))}
             </div>
