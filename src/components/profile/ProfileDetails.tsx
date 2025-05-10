@@ -1,0 +1,114 @@
+
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/contexts/AuthContext";
+import { User, CreditCard, Landmark, MapPin } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+
+const ProfileDetails: React.FC = () => {
+  const { user, getUserFinancialData } = useAuth();
+  const financialData = getUserFinancialData();
+  
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
+  if (!user) {
+    return <div>Loading profile information...</div>;
+  }
+
+  const getIncomeSourceLabel = (source: string) => {
+    const sources: Record<string, string> = {
+      "agriculture": "Agriculture",
+      "livestock": "Livestock",
+      "mixed_farming": "Mixed Farming",
+      "other": "Other",
+    };
+    return sources[source] || source;
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <User className="h-5 w-5 mr-2" />
+            Personal Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h4 className="text-sm font-medium text-muted-foreground">Full Name</h4>
+              <p className="text-base">{user.name}</p>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium text-muted-foreground">Email</h4>
+              <p className="text-base">{user.email}</p>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium text-muted-foreground">User Type</h4>
+              <p className="text-base capitalize">{user.role}</p>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium text-muted-foreground">Account ID</h4>
+              <p className="text-base">{user.id}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {user.role === "farmer" && financialData && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <CreditCard className="h-5 w-5 mr-2" />
+              Financial Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground">Current Balance</h4>
+                <p className="text-xl font-semibold text-green-600">
+                  {formatCurrency(financialData.currentBalance)}
+                </p>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground">Loan Amount</h4>
+                <p className="text-xl font-semibold text-blue-600">
+                  {formatCurrency(financialData.loanAmount)}
+                </p>
+              </div>
+            </div>
+
+            <Separator />
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground">Income Source</h4>
+                <div className="flex items-center mt-1">
+                  <Landmark className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <p>{getIncomeSourceLabel(financialData.incomeSource)}</p>
+                </div>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground">Farm Size</h4>
+                <div className="flex items-center mt-1">
+                  <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <p>{financialData.farmSize ? `${financialData.farmSize} acres` : "Not specified"}</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+export default ProfileDetails;

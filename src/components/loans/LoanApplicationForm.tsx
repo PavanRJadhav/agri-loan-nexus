@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Form,
   FormControl,
@@ -101,6 +102,8 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 const LoanApplicationForm: React.FC = () => {
+  const { user, addLoanApplication, addTransaction } = useAuth();
+  
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -121,6 +124,22 @@ const LoanApplicationForm: React.FC = () => {
       console.log("Submitting loan application:", data);
       // In a real app, we would send this data to an API
       await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Add loan to user's loans
+      const loanTypeName = selectedLoan?.name || data.loanType;
+      
+      addLoanApplication({
+        type: loanTypeName,
+        amount: data.amount,
+        purpose: data.purpose
+      });
+      
+      // Record a transaction for application fee
+      addTransaction({
+        amount: 500, // Application fee
+        type: "payment",
+        description: `Application fee for ${loanTypeName}`
+      });
       
       toast.success("Loan application submitted successfully!", {
         description: `Your ${selectedLoan?.name} application has been received.`,

@@ -7,12 +7,27 @@ import { Link } from "react-router-dom";
 import StatCard from "./StatCard";
 import ApplicationItem from "./ApplicationItem";
 import CreditCardDisplay from "./CreditCardDisplay";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface FarmerDashboardProps {
   userName: string;
 }
 
 const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ userName }) => {
+  const { user, getUserFinancialData } = useAuth();
+  const financialData = getUserFinancialData();
+  
+  // Calculate total loan amount from applications
+  const totalLoanAmount = user?.loans?.reduce((total, loan) => total + loan.amount, 0) || 0;
+  
+  // Count active applications
+  const activeApplications = user?.loans?.length || 0;
+  const approvedApplications = user?.loans?.filter(loan => loan.status === "approved").length || 0;
+  const pendingApplications = user?.loans?.filter(loan => loan.status === "pending").length || 0;
+  
+  // Get latest loans
+  const recentLoans = user?.loans?.slice(0, 3) || [];
+  
   return (
     <div className="space-y-6">
       <div>
@@ -25,30 +40,30 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ userName }) => {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Loan Amount"
-          value="₹25,000"
-          description="+20% from last month"
+          value={totalLoanAmount > 0 ? `₹${totalLoanAmount.toLocaleString()}` : "₹0"}
+          description={financialData?.loanAmount ? `₹${financialData.loanAmount.toLocaleString()} requested` : "No loan amount set"}
           icon={CreditCard}
         />
         
         <StatCard
           title="Active Applications"
-          value="2"
-          description="1 approved, 1 pending"
+          value={activeApplications.toString()}
+          description={`${approvedApplications} approved, ${pendingApplications} pending`}
           icon={BarChart}
         />
         
         <StatCard
-          title="Credit Score"
-          value="720"
-          description="Improved by 15 points"
+          title="Current Balance"
+          value={financialData?.currentBalance ? `₹${financialData.currentBalance.toLocaleString()}` : "₹0"}
+          description="Available in your account"
           icon={ArrowUp}
           descriptionColor="text-green-600"
         />
         
         <StatCard
           title="Next Payment"
-          value="15 May"
-          description="₹2,000 due"
+          value="--"
+          description="No upcoming payments"
           icon={CalendarDays}
         />
       </div>
@@ -71,29 +86,33 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ userName }) => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <ApplicationItem
-                id={1}
-                title="Crop Season Loan"
-                date="Applied on 1 May 2023"
-                status="Approved"
-                statusColor="bg-green-100 text-green-800"
-              />
-              
-              <ApplicationItem
-                id={2}
-                title="Equipment Purchase"
-                date="Applied on 12 April 2023" 
-                status="Pending"
-                statusColor="bg-yellow-100 text-yellow-800"
-              />
-              
-              <ApplicationItem
-                id={3}
-                title="Irrigation System"
-                date="Applied on 3 March 2023"
-                status="Rejected"
-                statusColor="bg-red-100 text-red-800"
-              />
+              {recentLoans.length > 0 ? (
+                recentLoans.map((loan, index) => (
+                  <ApplicationItem
+                    key={loan.id}
+                    id={index + 1}
+                    title={loan.type}
+                    date={`Applied on ${new Date(loan.submittedAt).toLocaleDateString()}`}
+                    status={loan.status}
+                    statusColor={
+                      loan.status === "approved" 
+                        ? "bg-green-100 text-green-800" 
+                        : loan.status === "rejected" 
+                          ? "bg-red-100 text-red-800" 
+                          : "bg-yellow-100 text-yellow-800"
+                    }
+                  />
+                ))
+              ) : (
+                <div className="text-center py-6 text-muted-foreground">
+                  <p>No loan applications yet</p>
+                  <Button variant="link" asChild>
+                    <Link to="/loan-applications/new">
+                      Apply for your first loan
+                    </Link>
+                  </Button>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -110,9 +129,9 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ userName }) => {
               name={userName}
               cardNumber="**** **** **** 4589"
               validUntil="12/25"
-              availableCredit="₹37,500"
+              availableCredit={financialData?.currentBalance ? `₹${financialData.currentBalance.toLocaleString()}` : "₹0"}
               creditLimit="₹50,000"
-              percentAvailable={75}
+              percentAvailable={financialData?.currentBalance ? Math.min(100, Math.round((financialData.currentBalance / 50000) * 100)) : 0}
             />
           </CardContent>
         </Card>

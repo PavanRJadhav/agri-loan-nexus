@@ -3,11 +3,38 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 
 export type UserRole = "farmer" | "admin" | "verifier";
 
+export interface UserFinancialData {
+  currentBalance: number;
+  loanAmount: number;
+  incomeSource: string;
+  farmSize: string;
+}
+
+export interface LoanApplication {
+  id: string;
+  type: string;
+  amount: number;
+  purpose: string;
+  status: "pending" | "approved" | "rejected";
+  submittedAt: string;
+}
+
+export interface Transaction {
+  id: string;
+  amount: number;
+  type: "deposit" | "withdrawal" | "payment" | "disbursement";
+  description: string;
+  date: string;
+}
+
 export interface User {
   id: string;
   name: string;
   email: string;
   role: UserRole;
+  financialData?: UserFinancialData;
+  loans?: LoanApplication[];
+  transactions?: Transaction[];
 }
 
 interface AuthContextType {
@@ -17,6 +44,10 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, role: UserRole) => Promise<void>;
   logout: () => void;
+  updateUserData: (data: Partial<User>) => void;
+  getUserFinancialData: () => UserFinancialData | undefined;
+  addLoanApplication: (loan: Omit<LoanApplication, "id" | "submittedAt" | "status">) => void;
+  addTransaction: (transaction: Omit<Transaction, "id" | "date">) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,10 +60,136 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const storedUser = localStorage.getItem("agriloan_user");
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      const parsedUser = JSON.parse(storedUser);
+      
+      // Load additional user data if available
+      const userDataKey = `agriloan_userdata_${parsedUser.email}`;
+      const userData = localStorage.getItem(userDataKey);
+      
+      if (userData) {
+        const parsedUserData = JSON.parse(userData);
+        setUser({
+          ...parsedUser,
+          financialData: {
+            currentBalance: parsedUserData.currentBalance || 0,
+            loanAmount: parsedUserData.loanAmount || 0,
+            incomeSource: parsedUserData.incomeSource || '',
+            farmSize: parsedUserData.farmSize || ''
+          },
+          loans: parsedUserData.loans || [],
+          transactions: parsedUserData.transactions || []
+        });
+      } else {
+        setUser(parsedUser);
+      }
     }
     setIsLoading(false);
   }, []);
+
+  const updateUserData = (data: Partial<User>) => {
+    if (!user) return;
+    
+    const updatedUser = { ...user, ...data };
+    setUser(updatedUser);
+    
+    // Update in localStorage
+    localStorage.setItem("agriloan_user", JSON.stringify(updatedUser));
+    
+    // Update additional data in separate storage
+    if (user.email) {
+      const userDataKey = `agriloan_userdata_${user.email}`;
+      const existingData = localStorage.getItem(userDataKey);
+      const userData = existingData ? JSON.parse(existingData) : {};
+      
+      const updatedUserData = {
+        ...userData,
+        currentBalance: updatedUser.financialData?.currentBalance || userData.currentBalance || 0,
+        loanAmount: updatedUser.financialData?.loanAmount || userData.loanAmount || 0,
+        incomeSource: updatedUser.financialData?.incomeSource || userData.incomeSource || '',
+        farmSize: updatedUser.financialData?.farmSize || userData.farmSize || '',
+        loans: updatedUser.loans || userData.loans || [],
+        transactions: updatedUser.transactions || userData.transactions || []
+      };
+      
+      localStorage.setItem(userDataKey, JSON.stringify(updatedUserData));
+    }
+  };
+
+  const getUserFinancialData = () => {
+    if (!user || !user.email) return undefined;
+    
+    const userDataKey = `agriloan_userdata_${user.email}`;
+    const userData = localStorage.getItem(userDataKey);
+    
+    if (userData) {
+      const parsedData = JSON.parse(userData);
+      return {
+        currentBalance: parsedData.currentBalance || 0,
+        loanAmount: parsedData.loanAmount || 0,
+        incomeSource: parsedData.incomeSource || '',
+        farmSize: parsedData.farmSize || ''
+      };
+    }
+    
+    return undefined;
+  };
+
+  const addLoanApplication = (loan: Omit<LoanApplication, "id" | "submittedAt" | "status">) => {
+    if (!user || !user.email) return;
+    
+    const newLoan: LoanApplication = {
+      ...loan,
+      id: `loan-${Date.now()}`,
+      submittedAt: new Date().toISOString(),
+      status: "pending"
+    };
+    
+    const updatedLoans = [...(user.loans || []), newLoan];
+    
+    // Update user state
+    setUser(prev => {
+      if (!prev) return null;
+      return { ...prev, loans: updatedLoans };
+    });
+    
+    // Update in localStorage
+    const userDataKey = `agriloan_userdata_${user.email}`;
+    const userData = localStorage.getItem(userDataKey);
+    
+    if (userData) {
+      const parsedData = JSON.parse(userData);
+      parsedData.loans = updatedLoans;
+      localStorage.setItem(userDataKey, JSON.stringify(parsedData));
+    }
+  };
+
+  const addTransaction = (transaction: Omit<Transaction, "id" | "date">) => {
+    if (!user || !user.email) return;
+    
+    const newTransaction: Transaction = {
+      ...transaction,
+      id: `txn-${Date.now()}`,
+      date: new Date().toISOString()
+    };
+    
+    const updatedTransactions = [...(user.transactions || []), newTransaction];
+    
+    // Update user state
+    setUser(prev => {
+      if (!prev) return null;
+      return { ...prev, transactions: updatedTransactions };
+    });
+    
+    // Update in localStorage
+    const userDataKey = `agriloan_userdata_${user.email}`;
+    const userData = localStorage.getItem(userDataKey);
+    
+    if (userData) {
+      const parsedData = JSON.parse(userData);
+      parsedData.transactions = updatedTransactions;
+      localStorage.setItem(userDataKey, JSON.stringify(parsedData));
+    }
+  };
 
   // In a real app, these would connect to a backend
   const login = async (email: string, password: string) => {
@@ -49,12 +206,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role = "verifier";
       }
       
-      const user = {
-        id: "user-" + Math.random().toString(36).substring(2, 9),
-        name: email.split('@')[0],
+      const userId = "user-" + Math.random().toString(36).substring(2, 9);
+      
+      // Check if user data exists
+      const userDataKey = `agriloan_userdata_${email}`;
+      const userData = localStorage.getItem(userDataKey);
+      
+      const user: User = {
+        id: userId,
+        name: userData ? JSON.parse(userData).name : email.split('@')[0],
         email,
         role
       };
+      
+      if (userData) {
+        const parsedData = JSON.parse(userData);
+        user.financialData = {
+          currentBalance: parsedData.currentBalance || 0,
+          loanAmount: parsedData.loanAmount || 0,
+          incomeSource: parsedData.incomeSource || '',
+          farmSize: parsedData.farmSize || ''
+        };
+        user.loans = parsedData.loans || [];
+        user.transactions = parsedData.transactions || [];
+      }
       
       localStorage.setItem("agriloan_user", JSON.stringify(user));
       setUser(user);
@@ -72,12 +247,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Mock register - would be replaced with actual API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const user = {
-        id: "user-" + Math.random().toString(36).substring(2, 9),
+      const userId = "user-" + Math.random().toString(36).substring(2, 9);
+      
+      // Get additional user data if it exists
+      const userDataKey = `agriloan_userdata_${email}`;
+      const userData = localStorage.getItem(userDataKey);
+      
+      const user: User = {
+        id: userId,
         name,
         email,
         role
       };
+      
+      if (userData) {
+        const parsedData = JSON.parse(userData);
+        user.financialData = {
+          currentBalance: parsedData.currentBalance || 0,
+          loanAmount: parsedData.loanAmount || 0,
+          incomeSource: parsedData.incomeSource || '',
+          farmSize: parsedData.farmSize || ''
+        };
+        user.loans = parsedData.loans || [];
+        user.transactions = parsedData.transactions || [];
+      }
       
       localStorage.setItem("agriloan_user", JSON.stringify(user));
       setUser(user);
@@ -101,7 +294,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isLoading,
       login,
       register,
-      logout
+      logout,
+      updateUserData,
+      getUserFinancialData,
+      addLoanApplication,
+      addTransaction
     }}>
       {children}
     </AuthContext.Provider>
