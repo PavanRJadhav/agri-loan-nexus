@@ -13,6 +13,7 @@ const UnauthorizedPage: React.FC = () => {
   // Determine where to redirect the user based on their role
   const handleReturnToDashboard = () => {
     if (user) {
+      // Redirect to the appropriate dashboard based on user role
       navigate("/dashboard");
     } else {
       navigate("/login");

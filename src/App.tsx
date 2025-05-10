@@ -20,6 +20,8 @@ import TransactionsPage from "./pages/TransactionsPage";
 import SupportChatPage from "./pages/SupportChatPage";
 import SettingsPage from "./pages/SettingsPage";
 import ProfilePage from "./pages/ProfilePage";
+import LoanVerificationPage from "./pages/LoanVerificationPage";
+import AllApplicationsPage from "./pages/AllApplicationsPage";
 
 // Create a new QueryClient instance outside of the component
 const queryClient = new QueryClient();
@@ -41,73 +43,56 @@ const App: React.FC = () => {
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/unauthorized" element={<UnauthorizedPage />} />
                 
-                {/* Protected farmer routes */}
-                <Route path="/dashboard" element={<MainLayout requiredRole="farmer" />}>
+                {/* Protected routes for all roles */}
+                <Route path="/dashboard" element={<MainLayout />}>
                   <Route index element={<DashboardPage />} />
                 </Route>
                 
-                {/* Loan application routes */}
+                {/* Protected farmer routes */}
                 <Route path="/loan-applications" element={<MainLayout requiredRole="farmer" />}>
                   <Route index element={<Navigate to="/dashboard" replace />} />
                   <Route path="new" element={<LoanApplicationPage />} />
                 </Route>
                 
-                {/* Credit card routes */}
                 <Route path="/credit-cards" element={<MainLayout requiredRole="farmer" />}>
                   <Route index element={<CreditCardsPage />} />
                 </Route>
                 
-                {/* Transactions routes */}
                 <Route path="/transactions" element={<MainLayout requiredRole="farmer" />}>
                   <Route index element={<TransactionsPage />} />
                 </Route>
                 
-                {/* Support routes */}
                 <Route path="/support" element={<MainLayout requiredRole="farmer" />}>
                   <Route index element={<SupportChatPage />} />
                 </Route>
                 
-                {/* Settings routes */}
-                <Route path="/settings" element={<MainLayout requiredRole="farmer" />}>
+                {/* Settings and Profile routes available for all roles */}
+                <Route path="/settings" element={<MainLayout />}>
                   <Route index element={<SettingsPage />} />
                 </Route>
                 
-                {/* Profile routes */}
-                <Route path="/profile" element={<MainLayout requiredRole="farmer" />}>
+                <Route path="/profile" element={<MainLayout />}>
                   <Route index element={<ProfilePage />} />
                 </Route>
                 
                 {/* Protected admin routes */}
-                <Route path="/admin" element={<MainLayout requiredRole="admin" />}>
-                  <Route index element={<Navigate to="/dashboard" replace />} />
-                </Route>
-                
-                {/* All applications routes for admin */}
                 <Route path="/all-applications" element={<MainLayout requiredRole="admin" />}>
-                  <Route index element={<Navigate to="/dashboard" replace />} />
+                  <Route index element={<AllApplicationsPage />} />
                 </Route>
                 
-                {/* User management routes for admin */}
                 <Route path="/users" element={<MainLayout requiredRole="admin" />}>
                   <Route index element={<Navigate to="/dashboard" replace />} />
                 </Route>
                 
-                {/* Analytics routes for admin */}
                 <Route path="/analytics" element={<MainLayout requiredRole="admin" />}>
                   <Route index element={<Navigate to="/dashboard" replace />} />
                 </Route>
                 
                 {/* Protected verifier routes */}
-                <Route path="/verifier" element={<MainLayout requiredRole="verifier" />}>
-                  <Route index element={<Navigate to="/dashboard" replace />} />
-                </Route>
-                
-                {/* Verify applications routes for verifier */}
                 <Route path="/verify-applications" element={<MainLayout requiredRole="verifier" />}>
-                  <Route index element={<Navigate to="/dashboard" replace />} />
+                  <Route index element={<LoanVerificationPage />} />
                 </Route>
                 
-                {/* Partners routes for verifier */}
                 <Route path="/partners" element={<MainLayout requiredRole="verifier" />}>
                   <Route index element={<Navigate to="/dashboard" replace />} />
                 </Route>
