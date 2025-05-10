@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, LineChart, PieChart, PieChartData } from "recharts";
+import { BarChart, Bar, LineChart, Line, PieChart, Pie, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Cell } from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
 
 const AnalyticsPage: React.FC = () => {
@@ -12,6 +12,9 @@ const AnalyticsPage: React.FC = () => {
     { name: "Irrigation", value: 15 },
     { name: "Seeds", value: 10 }
   ];
+
+  // Colors for pie chart
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
   const monthlyApplicationsData = [
     { name: "Jan", applications: 12 },
@@ -45,9 +48,27 @@ const AnalyticsPage: React.FC = () => {
             <CardDescription>Distribution of loan applications by category</CardDescription>
           </CardHeader>
           <CardContent className="h-80">
-            <PieChart width={400} height={300} data={loanTypeData}>
-              <PieChartData dataKey="value" nameKey="name" />
-            </PieChart>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={loanTypeData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                  nameKey="name"
+                  label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                >
+                  {loanTypeData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
         
@@ -57,18 +78,18 @@ const AnalyticsPage: React.FC = () => {
             <CardDescription>Number of applications per month</CardDescription>
           </CardHeader>
           <CardContent className="h-80">
-            <BarChart 
-              width={400} 
-              height={300} 
-              data={monthlyApplicationsData}
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-            >
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="applications" fill="#22c55e" />
-            </BarChart>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart 
+                data={monthlyApplicationsData}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="applications" fill="#22c55e" />
+              </BarChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
         
@@ -78,18 +99,18 @@ const AnalyticsPage: React.FC = () => {
             <CardDescription>Monthly loan approval rate percentage</CardDescription>
           </CardHeader>
           <CardContent className="h-80">
-            <LineChart
-              width={850}
-              height={300}
-              data={approvalRateData}
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-            >
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="rate" stroke="#8884d8" />
-            </LineChart>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={approvalRateData}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="rate" stroke="#8884d8" activeDot={{ r: 8 }} />
+              </LineChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
