@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CreditCard, BarChart, ArrowUp, CalendarDays, FileText, PlusCircle } from "lucide-react";
+import { CreditCard, BarChart, ArrowUp, CalendarDays, FileText, PlusCircle, Bank } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import StatCard from "./StatCard";
@@ -61,10 +61,11 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ userName }) => {
         />
         
         <StatCard
-          title="Next Payment"
-          value="--"
-          description="No upcoming payments"
-          icon={CalendarDays}
+          title="Preferred Lender"
+          value={user?.preferredLender?.name || "Not selected"}
+          description={user?.preferredLender?.interestRate ? `${user.preferredLender.interestRate}% interest rate` : "Choose a lending partner"}
+          icon={Bank}
+          link={user?.preferredLender ? "/profile" : "/lenders"}
         />
       </div>
       
@@ -137,32 +138,63 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ userName }) => {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <FileText className="mr-2 h-5 w-5" />
-            Apply for Loans
-          </CardTitle>
-          <CardDescription>
-            Need financial assistance? Apply for various agricultural loans tailored for you
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col md:flex-row gap-4">
-            <Button className="flex-1" asChild>
-              <Link to="/loan-applications/new">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                New Loan Application
-              </Link>
-            </Button>
-            <Button variant="outline" className="flex-1" asChild>
-              <Link to="/loan-applications">
-                View All Applications
-              </Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <FileText className="mr-2 h-5 w-5" />
+              Apply for Loans
+            </CardTitle>
+            <CardDescription>
+              Need financial assistance? Apply for various agricultural loans tailored for you
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col md:flex-row gap-4">
+              <Button className="flex-1" asChild>
+                <Link to="/loan-applications/new">
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  New Loan Application
+                </Link>
+              </Button>
+              <Button variant="outline" className="flex-1" asChild>
+                <Link to="/loan-applications">
+                  View All Applications
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Bank className="mr-2 h-5 w-5" />
+              Lending Partners
+            </CardTitle>
+            <CardDescription>
+              Choose a lending partner that best fits your financial needs
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col md:flex-row gap-4">
+              <Button className="flex-1" asChild>
+                <Link to="/lenders">
+                  <Bank className="mr-2 h-4 w-4" />
+                  Select Preferred Lender
+                </Link>
+              </Button>
+              {user?.preferredLender && (
+                <Button variant="outline" className="flex-1" asChild>
+                  <Link to="/profile">
+                    View Selected Lender
+                  </Link>
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

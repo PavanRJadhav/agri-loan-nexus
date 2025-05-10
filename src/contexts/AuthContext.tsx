@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 export type UserRole = "farmer" | "admin" | "verifier";
@@ -27,6 +26,12 @@ export interface Transaction {
   date: string;
 }
 
+export interface PreferredLender {
+  id: string;
+  name: string;
+  interestRate: number;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -35,6 +40,7 @@ export interface User {
   financialData?: UserFinancialData;
   loans?: LoanApplication[];
   transactions?: Transaction[];
+  preferredLender?: PreferredLender;
 }
 
 interface AuthContextType {
@@ -77,7 +83,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             farmSize: parsedUserData.farmSize || ''
           },
           loans: parsedUserData.loans || [],
-          transactions: parsedUserData.transactions || []
+          transactions: parsedUserData.transactions || [],
+          preferredLender: parsedUserData.preferredLender || null
         });
       } else {
         setUser(parsedUser);
@@ -108,7 +115,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         incomeSource: updatedUser.financialData?.incomeSource || userData.incomeSource || '',
         farmSize: updatedUser.financialData?.farmSize || userData.farmSize || '',
         loans: updatedUser.loans || userData.loans || [],
-        transactions: updatedUser.transactions || userData.transactions || []
+        transactions: updatedUser.transactions || userData.transactions || [],
+        preferredLender: updatedUser.preferredLender || userData.preferredLender || null
       };
       
       localStorage.setItem(userDataKey, JSON.stringify(updatedUserData));
@@ -229,6 +237,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
         user.loans = parsedData.loans || [];
         user.transactions = parsedData.transactions || [];
+        user.preferredLender = parsedData.preferredLender || null;
       }
       
       localStorage.setItem("agriloan_user", JSON.stringify(user));
@@ -270,6 +279,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
         user.loans = parsedData.loans || [];
         user.transactions = parsedData.transactions || [];
+        user.preferredLender = parsedData.preferredLender || null;
       }
       
       localStorage.setItem("agriloan_user", JSON.stringify(user));

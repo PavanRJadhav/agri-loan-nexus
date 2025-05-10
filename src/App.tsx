@@ -25,6 +25,7 @@ import AllApplicationsPage from "./pages/AllApplicationsPage";
 import UsersManagementPage from "./pages/UsersManagementPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import LendingPartnersPage from "./pages/LendingPartnersPage";
+import LenderSelection from "./components/loans/LenderSelection";
 
 // Create a new QueryClient instance outside of the component
 const queryClient = new QueryClient();
@@ -67,6 +68,10 @@ const App: React.FC = () => {
                 
                 <Route path="/support" element={<MainLayout requiredRole="farmer" />}>
                   <Route index element={<SupportChatPage />} />
+                </Route>
+                
+                <Route path="/lenders" element={<MainLayout requiredRole="farmer" />}>
+                  <Route index element={<LenderSelection />} />
                 </Route>
                 
                 {/* Settings and Profile routes available for all roles */}
