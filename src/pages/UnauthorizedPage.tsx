@@ -1,49 +1,39 @@
 
 import React from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
-import { ShieldAlert } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 
 const UnauthorizedPage: React.FC = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  
-  // Determine where to redirect the user based on their role
-  const handleReturnToDashboard = () => {
-    if (user) {
-      // Redirect to the appropriate dashboard based on user role
-      navigate("/dashboard");
-    } else {
-      navigate("/login");
-    }
-  };
-  
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center p-6 max-w-md">
-        <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <ShieldAlert className="h-8 w-8 text-yellow-600" />
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4">
+      <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-8 text-center">
+        <div className="flex justify-center mb-4">
+          <div className="bg-red-100 p-3 rounded-full">
+            <AlertTriangle className="h-12 w-12 text-red-500" />
+          </div>
         </div>
-        <h1 className="text-3xl font-bold mb-2">Access Denied</h1>
-        <p className="text-lg text-gray-600 mb-6">
-          You don't have permission to access this page.
+        
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
+        
+        <p className="text-gray-600 mb-6">
+          You don't have permission to access the requested page. Please contact your administrator if you believe this is an error.
         </p>
-        <div className="space-y-2">
-          <Button 
-            onClick={handleReturnToDashboard} 
-            className="bg-agriloan-primary hover:bg-agriloan-secondary w-full"
-          >
+        
+        <div className="flex flex-col space-y-2">
+          <Button onClick={() => navigate(-1)} variant="outline">
+            Go Back
+          </Button>
+          
+          <Button onClick={() => navigate("/dashboard")}>
             Return to Dashboard
           </Button>
-          {user && (
-            <p className="text-sm text-gray-500 mt-4">
-              Logged in as {user.name} ({user.role}).
-              <br />
-              If you believe this is a mistake, please contact support.
-            </p>
-          )}
+          
+          <Button onClick={() => navigate("/login")} variant="ghost">
+            Login as Different User
+          </Button>
         </div>
       </div>
     </div>
