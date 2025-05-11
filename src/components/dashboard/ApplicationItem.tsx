@@ -12,6 +12,8 @@ interface ApplicationItemProps {
   amount?: string;
   type?: string;
   applicantInitial?: string;
+  onApprove?: () => void;
+  onReject?: () => void;
 }
 
 const ApplicationItem: React.FC<ApplicationItemProps> = ({
@@ -23,7 +25,9 @@ const ApplicationItem: React.FC<ApplicationItemProps> = ({
   showActions = false,
   amount,
   type,
-  applicantInitial
+  applicantInitial,
+  onApprove,
+  onReject
 }) => {
   if (showActions && applicantInitial) {
     // Verifier view with actions
@@ -49,10 +53,18 @@ const ApplicationItem: React.FC<ApplicationItemProps> = ({
           <p className="text-sm text-muted-foreground">{amount}</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            View
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onReject}
+          >
+            Reject
           </Button>
-          <Button className="bg-agriloan-primary hover:bg-agriloan-secondary" size="sm">
+          <Button 
+            className="bg-agriloan-primary hover:bg-agriloan-secondary" 
+            size="sm"
+            onClick={onApprove}
+          >
             Verify
           </Button>
         </div>
