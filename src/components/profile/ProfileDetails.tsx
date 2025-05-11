@@ -1,6 +1,7 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Home, Mail, Phone, Calendar, Landmark, CreditCard } from "lucide-react";
+import { User, Home, Mail, Phone, Calendar, Landmark, CreditCard, MapPin } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Separator } from "@/components/ui/separator";
 

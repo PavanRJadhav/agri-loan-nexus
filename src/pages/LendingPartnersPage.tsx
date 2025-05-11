@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,8 +6,8 @@ import { Landmark, BanknoteIcon, CheckCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
-// Fix the export declaration conflict
-interface LendingPartnerType {
+// Define the LendingPartner type for this component
+export interface LendingPartnerType {
   id: string;
   name: string;
   description: string;
