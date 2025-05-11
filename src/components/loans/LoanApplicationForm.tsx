@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -26,7 +26,9 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
-import { CreditCard, FileText, Tractor, Sprout, Droplets } from "lucide-react";
+import { CreditCard, FileText, Tractor, Sprout, Droplets, ArrowRight } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Link } from "react-router-dom";
 
 const loanTypes = [
   {
@@ -103,6 +105,14 @@ type FormValues = z.infer<typeof formSchema>;
 
 const LoanApplicationForm: React.FC = () => {
   const { user, addLoanApplication, addTransaction } = useAuth();
+  const [maxEligibleAmount, setMaxEligibleAmount] = useState<number | null>(null);
+
+  // Effect to check credit score and set max eligible amount
+  useEffect(() => {
+    if (user?.creditScore?.maxEligibleAmount) {
+      setMaxEligibleAmount(user.creditScore.maxEligibleAmount);
+    }
+  }, [user?.creditScore]);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -116,12 +126,52 @@ const LoanApplicationForm: React.FC = () => {
   
   const selectedLoanType = form.watch("loanType");
   const hasCollateral = form.watch("hasCollateral");
+  const currentAmount = form.watch("amount");
   
   const selectedLoan = loanTypes.find(loan => loan.id === selectedLoanType);
+  
+  // Calculate loan type max amount based on credit score
+  const getAdjustedMaxAmount = () => {
+    if (!selectedLoan) return 2000000;
+    
+    // If credit score exists, use the lower of credit score max amount or loan type max amount
+    if (maxEligibleAmount !== null) {
+      return Math.min(maxEligibleAmount, selectedLoan.maxAmount);
+    }
+    
+    return selectedLoan.maxAmount;
+  };
+  
+  const adjustedMaxAmount = getAdjustedMaxAmount();
+  
+  // Check if amount exceeds adjusted max
+  const isAmountExceedingLimit = currentAmount > adjustedMaxAmount;
+  
+  // Calculate approval likelihood based on credit score
+  const getApprovalLikelihood = () => {
+    if (!user?.creditScore) return null;
+    
+    if (currentAmount > user.creditScore.maxEligibleAmount) {
+      return "Low";
+    }
+    
+    return user.creditScore.loanApprovalLikelihood;
+  };
+  
+  const approvalLikelihood = getApprovalLikelihood();
   
   const onSubmit = async (data: FormValues) => {
     try {
       console.log("Submitting loan application:", data);
+      
+      // Validate against credit score
+      if (user?.creditScore && data.amount > user.creditScore.maxEligibleAmount) {
+        toast.error("Loan amount exceeds your eligible limit", {
+          description: `Based on your credit score, you can apply for up to ₹${user.creditScore.maxEligibleAmount.toLocaleString()}.`,
+        });
+        return;
+      }
+      
       // In a real app, we would send this data to an API
       await new Promise(resolve => setTimeout(resolve, 1500));
       
@@ -162,6 +212,40 @@ const LoanApplicationForm: React.FC = () => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {user?.creditScore ? (
+          <Alert className={
+            approvalLikelihood === 'High' ? 'bg-green-50 border-green-200 text-green-800' :
+            approvalLikelihood === 'Medium' ? 'bg-yellow-50 border-yellow-200 text-yellow-800' :
+            'bg-red-50 border-red-200 text-red-800'
+          }>
+            <AlertTitle className="flex items-center gap-2">
+              Credit Score: {user.creditScore.score}
+              {approvalLikelihood === 'High' ? ' - Excellent!' : 
+               approvalLikelihood === 'Medium' ? ' - Good' : 
+               ' - Needs Improvement'}
+            </AlertTitle>
+            <AlertDescription>
+              Based on your credit score, you can apply for loans up to 
+              <span className="font-bold"> ₹{user.creditScore.maxEligibleAmount.toLocaleString()}</span>.
+              Your approval likelihood is <span className="font-bold">{user.creditScore.loanApprovalLikelihood}</span>.
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <Alert className="bg-blue-50 border-blue-200">
+            <AlertTitle className="flex items-center gap-2">
+              <ArrowRight className="h-4 w-4" />
+              Improve your loan approval chances
+            </AlertTitle>
+            <AlertDescription>
+              Getting your credit score can increase your loan approval chances and potentially 
+              increase your borrowing limit.
+              <Button variant="link" asChild className="p-0 h-auto font-normal">
+                <Link to="/credit-score"> Check your credit score now</Link>
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <div className="grid gap-6 md:grid-cols-2">
           <div>
             <h2 className="text-2xl font-semibold mb-4">Loan Details</h2>
@@ -208,10 +292,14 @@ const LoanApplicationForm: React.FC = () => {
                       type="number"
                       {...field}
                       onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                      className={isAmountExceedingLimit ? "border-red-500 focus:ring-red-500" : ""}
                     />
                   </FormControl>
-                  <FormDescription>
-                    {selectedLoan ? `Maximum amount: ₹${selectedLoan.maxAmount.toLocaleString()}` : "Select a loan type to see maximum amount"}
+                  <FormDescription className={isAmountExceedingLimit ? "text-red-500" : ""}>
+                    {selectedLoan 
+                      ? `Maximum eligible amount: ₹${adjustedMaxAmount.toLocaleString()}`
+                      : "Select a loan type to see maximum amount"}
+                    {isAmountExceedingLimit && " - Amount exceeds your eligible limit!"}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -337,7 +425,11 @@ const LoanApplicationForm: React.FC = () => {
         </div>
         
         <div className="flex justify-end">
-          <Button type="submit" size="lg">
+          <Button 
+            type="submit" 
+            size="lg"
+            disabled={isAmountExceedingLimit}
+          >
             Submit Application
           </Button>
         </div>

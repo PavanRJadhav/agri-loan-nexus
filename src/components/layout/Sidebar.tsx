@@ -1,101 +1,162 @@
-
 import React from "react";
-import { NavLink } from "react-router-dom";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuList,
+} from "@/components/ui/navigation-menu";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { 
-  Home, 
-  CreditCard, 
-  PieChart, 
-  FileText, 
-  Users, 
-  MessageSquare, 
+import {
+  Home,
+  Users,
   Settings,
-  UserCheck,
+  FileText,
   Building,
-  BarChart4,
-  User
+  PlusCircle,
+  CreditCard,
+  CheckCircle
 } from "lucide-react";
 
-const Sidebar: React.FC = () => {
-  const { user } = useAuth();
-  
-  // Define navigation links based on user role
-  const getNavLinks = () => {
-    const commonLinks = [
-      { name: "Dashboard", icon: Home, path: "/dashboard" },
-    ];
-    
-    const farmerLinks = [
-      { name: "Loan Applications", icon: FileText, path: "/loan-applications/new" },
-      { name: "Credit Cards", icon: CreditCard, path: "/credit-cards" },
-      { name: "Transactions", icon: PieChart, path: "/transactions" },
-      { name: "Support Chat", icon: MessageSquare, path: "/support" },
-    ];
-    
-    const adminLinks = [
-      { name: "All Applications", icon: FileText, path: "/all-applications" },
-      { name: "User Management", icon: Users, path: "/users" },
-      { name: "Analytics", icon: BarChart4, path: "/analytics" },
-    ];
-    
-    const verifierLinks = [
-      { name: "Verify Applications", icon: UserCheck, path: "/verify-applications" },
-      { name: "Lending Partners", icon: Building, path: "/partners" },
-    ];
-    
-    // Add profile and settings links for all user roles
-    const profileSettingsLinks = [
-      { name: "My Profile", icon: User, path: "/profile" },
-      { name: "Settings", icon: Settings, path: "/settings" }
-    ];
-    
-    if (user?.role === "farmer") {
-      return [...commonLinks, ...farmerLinks, ...profileSettingsLinks];
-    } else if (user?.role === "admin") {
-      return [...commonLinks, ...adminLinks, ...profileSettingsLinks];
-    } else if (user?.role === "verifier") {
-      return [...commonLinks, ...verifierLinks, ...profileSettingsLinks];
-    }
-    
-    return commonLinks;
+export function Sidebar() {
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
   };
-  
-  const navLinks = getNavLinks();
+
+  const adminNavItems = [
+    {
+      title: "Dashboard",
+      href: "/dashboard",
+      icon: Home,
+    },
+    {
+      title: "Users",
+      href: "/users",
+      icon: Users,
+    },
+    {
+      title: "Lending Partners",
+      href: "/lenders",
+      icon: Building,
+    },
+    {
+      title: "Settings",
+      href: "/settings",
+      icon: Settings,
+    },
+  ];
+
+  const farmerNavItems = [
+    {
+      title: "Dashboard",
+      href: "/dashboard",
+      icon: Home,
+    },
+    {
+      title: "Loan Applications",
+      href: "/loan-applications",
+      icon: FileText,
+    },
+    {
+      title: "New Application",
+      href: "/loan-applications/new",
+      icon: PlusCircle,
+    },
+    {
+      title: "Lending Partners",
+      href: "/lenders",
+      icon: Building,
+    },
+    {
+      title: "Credit Score",
+      href: "/credit-score",
+      icon: CheckCircle,
+    },
+  ];
+
+  const verifierNavItems = [
+    {
+      title: "Dashboard",
+      href: "/dashboard",
+      icon: Home,
+    },
+    {
+      title: "Loan Verification",
+      href: "/loan-verification",
+      icon: CreditCard,
+    },
+    {
+      title: "Lending Partners",
+      href: "/lenders",
+      icon: Building,
+    },
+    {
+      title: "Settings",
+      href: "/settings",
+      icon: Settings,
+    },
+  ];
+
+  let navItems;
+  if (user?.role === "admin") {
+    navItems = adminNavItems;
+  } else if (user?.role === "farmer") {
+    navItems = farmerNavItems;
+  } else if (user?.role === "verifier") {
+    navItems = verifierNavItems;
+  } else {
+    navItems = [];
+  }
 
   return (
-    <aside className="hidden md:flex md:w-64 lg:w-72 flex-col bg-white border-r border-gray-200 overflow-y-auto">
-      <div className="h-16 flex items-center px-6 border-b border-gray-200">
-        <h1 className="text-xl font-semibold text-agriloan-primary">AgriLoan Nexus</h1>
-      </div>
-      
-      <div className="px-3 py-4">
-        <div className="mb-4">
-          <div className="px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
-            {user?.role?.toUpperCase()}
-          </div>
+    <Sheet>
+      <SheetTrigger asChild>
+        <div className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 data-[state=open]:bg-accent data-[state=open]:text-accent-foreground bg-secondary text-secondary-foreground h-10 px-4 py-2">
+          Open Menu
         </div>
-        
-        <nav className="space-y-1">
-          {navLinks.map((link) => (
-            <NavLink
-              key={link.path}
-              to={link.path}
-              className={({ isActive }) =>
-                `flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActive
-                    ? "bg-agriloan-primary text-white"
-                    : "text-gray-700 hover:bg-gray-100"
-                }`
-              }
-            >
-              <link.icon className="h-5 w-5 mr-3" />
-              {link.name}
-            </NavLink>
-          ))}
-        </nav>
-      </div>
-    </aside>
+      </SheetTrigger>
+      <SheetContent className="w-full sm:w-64">
+        <SheetHeader>
+          <SheetTitle>Menu</SheetTitle>
+          <SheetDescription>
+            Navigate through the application using the menu below.
+          </SheetDescription>
+        </SheetHeader>
+        <Separator className="my-4" />
+        <NavigationMenu>
+          <NavigationMenuList>
+            {navItems.map((item) => (
+              <NavigationMenuItem key={item.title}>
+                <Link
+                  to={item.href}
+                  className="group flex items-center gap-2 rounded-md p-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted hover:text-foreground focus:bg-secondary focus:text-secondary-foreground"
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.title}
+                </Link>
+              </NavigationMenuItem>
+            ))}
+            <NavigationMenuItem>
+              <button
+                onClick={handleLogout}
+                className="group flex items-center gap-2 rounded-md p-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted hover:text-foreground focus:bg-secondary focus:text-secondary-foreground"
+              >
+                Logout
+              </button>
+            </NavigationMenuItem>
+          </NavigationMenuList>
+        </NavigationMenu>
+      </SheetContent>
+    </Sheet>
   );
-};
-
-export default Sidebar;
+}

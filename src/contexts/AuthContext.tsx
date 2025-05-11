@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { sendEmailNotification, getNotificationTemplates } from "@/services/NotificationService";
 
 export type UserRole = "farmer" | "admin" | "verifier";
@@ -37,11 +37,24 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: UserRole;
-  financialData?: UserFinancialData;
+  role: "farmer" | "admin" | "verifier";
   loans?: LoanApplication[];
   transactions?: Transaction[];
-  preferredLender?: PreferredLender;
+  preferredLender?: {
+    id: string;
+    name: string;
+    interestRate: number;
+  };
+  aadhaarVerified?: boolean;
+  aadhaarNumber?: string;
+  currentBalance?: number;
+  creditScore?: {
+    score: number;
+    maxEligibleAmount: number;
+    riskLevel: 'Low' | 'Medium' | 'High';
+    contributingFactors: string[];
+    loanApprovalLikelihood: 'High' | 'Medium' | 'Low';
+  };
 }
 
 interface AuthContextType {
@@ -129,14 +142,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const updateUserData = (data: Partial<User>) => {
+  const updateUserData = useCallback((data: Partial<User>) => {
     if (!user) return;
     
     const updatedUser = { ...user, ...data };
     setUser(updatedUser);
     
-    // Update in localStorage
-    localStorage.setItem("agriloan_user", JSON.stringify(updatedUser));
+    // Update localStorage
+    localStorage.setItem(`agriloan_userdata_${updatedUser.email}`, JSON.stringify(updatedUser));
     
     // Update additional data in separate storage
     if (user.email) {
@@ -160,7 +173,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Send profile updated notification
       sendNotification("profile_updated", {});
     }
-  };
+  }, [user]);
 
   const getUserFinancialData = () => {
     if (!user || !user.email) return undefined;
