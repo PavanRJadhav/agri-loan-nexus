@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CreditCard, BarChart, ArrowUp, CalendarDays, FileText, PlusCircle, Landmark, BanknoteIcon } from "lucide-react";
+import { CreditCard, BarChart, ArrowUp, CalendarDays, FileText, PlusCircle, Landmark, BanknoteIcon, Building } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import StatCard from "./StatCard";
@@ -169,7 +169,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ userName }) => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Bank className="mr-2 h-5 w-5" />
+              <Building className="mr-2 h-5 w-5" />
               Lending Partners
             </CardTitle>
             <CardDescription>
@@ -180,7 +180,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ userName }) => {
             <div className="flex flex-col md:flex-row gap-4">
               <Button className="flex-1" asChild>
                 <Link to="/lenders">
-                  <Bank className="mr-2 h-4 w-4" />
+                  <Building className="mr-2 h-4 w-4" />
                   Select Preferred Lender
                 </Link>
               </Button>
