@@ -2,25 +2,17 @@
 import React from "react";
 import { Outlet, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import Sidebar from "./Sidebar";
+import { Sidebar } from "./Sidebar";
 import Header from "./Header";
 
 interface MainLayoutProps {
+  children?: React.ReactNode;
   requiredRole?: "farmer" | "admin" | "verifier";
 }
 
-const MainLayout: React.FC<MainLayoutProps> = ({ requiredRole }) => {
-  const { user, isAuthenticated, isLoading } = useAuth();
+const MainLayout: React.FC<MainLayoutProps> = ({ children, requiredRole }) => {
+  const { user, isAuthenticated } = useAuth();
   const location = useLocation();
-
-  // Show loading state
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-agriloan-light">
-        <div className="w-16 h-16 border-4 border-agriloan-primary border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
 
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
@@ -39,7 +31,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRole }) => {
           <div className="flex flex-col flex-1 overflow-hidden">
             <Header />
             <main className="flex-1 overflow-y-auto p-4 md:p-6">
-              <Outlet />
+              {children}
             </main>
           </div>
         </div>
@@ -59,7 +51,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRole }) => {
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header />
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
-          <Outlet />
+          {children}
         </main>
       </div>
     </div>

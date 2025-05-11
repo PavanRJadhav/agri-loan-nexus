@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { sendEmailNotification, getNotificationTemplates } from "@/services/NotificationService";
 
@@ -55,12 +56,12 @@ export interface User {
     contributingFactors: string[];
     loanApprovalLikelihood: 'High' | 'Medium' | 'Low';
   };
+  financialData?: UserFinancialData;
 }
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, role: UserRole) => Promise<void>;
   logout: () => void;
@@ -356,7 +357,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider value={{ 
       user, 
       isAuthenticated: !!user, 
-      isLoading,
       login,
       register,
       logout,

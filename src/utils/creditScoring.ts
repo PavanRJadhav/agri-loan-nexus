@@ -1,197 +1,141 @@
-
-// Credit Scoring System for Farmer Loan Applications
-
-interface CreditScoreFactors {
-  landSize?: number;          // Land size in acres
-  cropHistory?: string[];     // Past crops grown
-  seasonalData?: {            // Seasonal farming data
-    season: string;
-    crop: string;
-    yield: number;
-  }[];
-  marketPrices?: {            // Market prices for crops
-    crop: string;
-    pricePerUnit: number;
-  }[];
-  weatherData?: {             // Optional weather data
-    rainfall: number;         // mm
-    temperature: number;      // celsius
-  };
-  creditHistory?: {           // Optional previous loan history
-    previousLoans: number;
-    onTimePayments: number;
-    missedPayments: number;
-  };
-  aadhaarVerified: boolean;   // Whether Aadhaar is verified
-  previousLoanAmount?: number; // Previous loan amount if any
-  previousLoanRepaid?: boolean; // Whether previous loan was repaid
-  farmingExperience?: number; // Years of farming experience
+// Add export to the CreditScoreFactors interface to make it accessible
+export interface CreditScoreFactors {
+  paymentHistory: 'good' | 'average' | 'poor';
+  cropYields: 'high' | 'medium' | 'low';
+  landOwnership: 'owned' | 'leased' | 'partial';
+  farmingExperience: 'novice' | 'experienced' | 'expert';
+  existingLoans: 'none' | 'few' | 'many';
+  marketVolatility: 'stable' | 'moderate' | 'volatile';
+  landSize: 'small' | 'medium' | 'large';
+  weatherImpact: 'minimal' | 'moderate' | 'severe';
+  incomeStability: 'stable' | 'seasonal' | 'volatile';
+  insuranceCoverage: 'high' | 'partial' | 'none';
 }
 
 export interface CreditScoreResult {
-  score: number;              // 300-850 scale
-  maxEligibleAmount: number;  // Maximum eligible loan amount
+  score: number;
+  maxEligibleAmount: number;
   riskLevel: 'Low' | 'Medium' | 'High';
-  contributingFactors: string[]; // Factors that contributed to the score
+  contributingFactors: string[];
   loanApprovalLikelihood: 'High' | 'Medium' | 'Low';
 }
 
-// Calculate credit score based on multiple factors
 export const calculateCreditScore = (factors: CreditScoreFactors): CreditScoreResult => {
-  let baseScore = 500; // Starting score
-  const contributingFactors: string[] = [];
+  let score = 500; // Base score
 
-  // Aadhaar verification is mandatory
-  if (!factors.aadhaarVerified) {
-    return {
-      score: 0,
-      maxEligibleAmount: 0,
-      riskLevel: 'High',
-      contributingFactors: ['Aadhaar not verified'],
-      loanApprovalLikelihood: 'Low'
-    };
+  // Adjust score based on factors
+  switch (factors.paymentHistory) {
+    case 'good': score += 150; break;
+    case 'average': score += 50; break;
+    case 'poor': score -= 100; break;
   }
-  
-  // Land size factor (larger land typically means more capacity)
-  if (factors.landSize) {
-    const landSizeScore = Math.min(factors.landSize * 10, 100);
-    baseScore += landSizeScore;
-    if (landSizeScore > 50) {
-      contributingFactors.push('Substantial land ownership');
-    }
+
+  switch (factors.cropYields) {
+    case 'high': score += 100; break;
+    case 'medium': score += 50; break;
+    case 'low': score -= 50; break;
   }
-  
-  // Crop diversity factor
-  if (factors.cropHistory && factors.cropHistory.length > 0) {
-    const uniqueCrops = new Set(factors.cropHistory).size;
-    const cropDiversityScore = Math.min(uniqueCrops * 15, 75);
-    baseScore += cropDiversityScore;
-    if (cropDiversityScore > 30) {
-      contributingFactors.push('Good crop diversity');
-    }
+
+  switch (factors.landOwnership) {
+    case 'owned': score += 80; break;
+    case 'leased': score -= 30; break;
+    case 'partial': score += 40; break;
   }
-  
-  // Seasonal data factor
-  if (factors.seasonalData && factors.seasonalData.length > 0) {
-    const averageYield = factors.seasonalData.reduce((sum, season) => sum + season.yield, 0) / factors.seasonalData.length;
-    const seasonalScore = Math.min(averageYield * 5, 50);
-    baseScore += seasonalScore;
-    if (seasonalScore > 25) {
-      contributingFactors.push('Strong seasonal yields');
-    }
+
+  switch (factors.farmingExperience) {
+    case 'expert': score += 70; break;
+    case 'experienced': score += 50; break;
+    case 'novice': score -= 20; break;
   }
-  
-  // Credit history factor (most important)
-  if (factors.creditHistory) {
-    const { previousLoans, onTimePayments, missedPayments } = factors.creditHistory;
-    
-    if (previousLoans > 0) {
-      const repaymentRatio = onTimePayments / previousLoans;
-      const creditHistoryScore = repaymentRatio * 100 - (missedPayments * 20);
-      baseScore += Math.max(creditHistoryScore, -150); // Can heavily penalize score
-      
-      if (repaymentRatio > 0.8) {
-        contributingFactors.push('Excellent repayment history');
-      } else if (missedPayments > 2) {
-        contributingFactors.push('Multiple missed payments detected');
-      }
-    }
+
+  switch (factors.existingLoans) {
+    case 'none': score += 100; break;
+    case 'few': score += 30; break;
+    case 'many': score -= 70; break;
   }
-  
-  // Previous loan repayment
-  if (factors.previousLoanAmount) {
-    if (factors.previousLoanRepaid) {
-      baseScore += 75;
-      contributingFactors.push('Successfully repaid previous loan');
-    } else {
-      baseScore -= 100;
-      contributingFactors.push('Previous loan not fully repaid');
-    }
+
+  switch (factors.marketVolatility) {
+    case 'stable': score += 50; break;
+    case 'moderate': score -= 20; break;
+    case 'volatile': score -= 80; break;
   }
-  
-  // Farming experience
-  if (factors.farmingExperience) {
-    const experienceScore = Math.min(factors.farmingExperience * 5, 50);
-    baseScore += experienceScore;
-    if (experienceScore > 25) {
-      contributingFactors.push('Significant farming experience');
-    }
+
+   switch (factors.landSize) {
+    case 'large': score += 60; break;
+    case 'medium': score += 30; break;
+    case 'small': score -= 10; break;
   }
-  
-  // Ensure score stays within valid range
-  const finalScore = Math.max(300, Math.min(850, baseScore));
-  
+
+  switch (factors.weatherImpact) {
+    case 'minimal': score += 40; break;
+    case 'moderate': score -= 10; break;
+    case 'severe': score -= 50; break;
+  }
+
+  switch (factors.incomeStability) {
+    case 'stable': score += 70; break;
+    case 'seasonal': score += 20; break;
+    case 'volatile': score -= 40; break;
+  }
+
+  switch (factors.insuranceCoverage) {
+    case 'high': score += 50; break;
+    case 'partial': score += 20; break;
+    case 'none': score -= 30; break;
+  }
+
+  // Cap the score between 300 and 850
+  score = Math.max(300, Math.min(score, 850));
+
   // Determine risk level
-  let riskLevel: 'Low' | 'Medium' | 'High';
-  if (finalScore >= 700) {
+  let riskLevel: 'Low' | 'Medium' | 'High' = 'Medium';
+  if (score >= 700) {
     riskLevel = 'Low';
-  } else if (finalScore >= 550) {
-    riskLevel = 'Medium';
-  } else {
+  } else if (score < 550) {
     riskLevel = 'High';
   }
-  
-  // Calculate max eligible loan amount based on score
-  // Formula: Base amount (50,000) + score factor * 1000
-  const maxEligibleAmount = 50000 + (finalScore - 300) * 1000;
-  
+
   // Determine loan approval likelihood
-  let loanApprovalLikelihood: 'High' | 'Medium' | 'Low';
-  if (finalScore >= 680) {
+  let loanApprovalLikelihood: 'High' | 'Medium' | 'Low' = 'Medium';
+  if (score >= 700) {
     loanApprovalLikelihood = 'High';
-  } else if (finalScore >= 550) {
-    loanApprovalLikelihood = 'Medium';
-  } else {
+  } else if (score < 550) {
     loanApprovalLikelihood = 'Low';
   }
-  
+
+  // Determine contributing factors
+  const contributingFactors: string[] = [];
+  if (factors.paymentHistory === 'poor') contributingFactors.push('Poor payment history');
+  if (factors.cropYields === 'low') contributingFactors.push('Low crop yields');
+  if (factors.landOwnership === 'leased') contributingFactors.push('Leased land');
+  if (factors.existingLoans === 'many') contributingFactors.push('Many existing loans');
+  if (factors.marketVolatility === 'volatile') contributingFactors.push('Volatile market');
+  if (factors.incomeStability === 'volatile') contributingFactors.push('Volatile income');
+  if (factors.insuranceCoverage === 'none') contributingFactors.push('No insurance coverage');
+
+  // Calculate max eligible loan amount
+  let maxEligibleAmount = 10000; // Base amount
+  if (riskLevel === 'Low') {
+    maxEligibleAmount = 500000;
+  } else if (riskLevel === 'Medium') {
+    maxEligibleAmount = 200000;
+  }
+
   return {
-    score: finalScore,
-    maxEligibleAmount: Math.round(maxEligibleAmount / 1000) * 1000, // Round to nearest thousand
+    score: Math.round(score),
+    maxEligibleAmount,
     riskLevel,
-    contributingFactors: contributingFactors.length > 0 ? contributingFactors : ['Insufficient data for detailed analysis'],
-    loanApprovalLikelihood
+    contributingFactors,
+    loanApprovalLikelihood,
   };
 };
 
-// Simulate AI prediction for repayment ability
-export const predictRepaymentAbility = (
-  loanAmount: number, 
-  creditScore: number, 
-  monthlyIncome?: number
-): { canRepay: boolean; confidence: number } => {
-  // Basic affordability check
-  if (monthlyIncome && loanAmount > monthlyIncome * 36) {
-    return { canRepay: false, confidence: 0.85 };
-  }
-  
-  // Credit score based prediction
+export const generateLoanRecommendation = (creditScore: number, currentLoanAmount: number, maxEligibleAmount: number): string => {
   if (creditScore >= 700) {
-    return { canRepay: true, confidence: 0.9 };
-  } else if (creditScore >= 600) {
-    return { canRepay: true, confidence: 0.7 };
-  } else if (creditScore >= 500) {
-    return { canRepay: loanAmount < 150000, confidence: 0.6 };
+    return `Congratulations! With a credit score of ${creditScore}, you are eligible for loans up to ₹${maxEligibleAmount.toLocaleString()} with favorable interest rates.`;
+  } else if (creditScore >= 550) {
+    return `With a credit score of ${creditScore}, you are eligible for standard loan options up to ₹${maxEligibleAmount.toLocaleString()}.`;
   } else {
-    return { canRepay: loanAmount < 50000, confidence: 0.5 };
-  }
-};
-
-// Generate recommendation based on credit analysis
-export const generateLoanRecommendation = (
-  creditScore: number,
-  requestedAmount: number,
-  maxEligibleAmount: number
-): string => {
-  if (requestedAmount > maxEligibleAmount) {
-    return `The requested amount exceeds your eligible limit. We recommend applying for ₹${maxEligibleAmount.toLocaleString()} or less.`;
-  }
-  
-  if (creditScore >= 700) {
-    return "Your credit profile is strong. Consider exploring premium loan options with lower interest rates.";
-  } else if (creditScore >= 600) {
-    return "Your credit score is good. We recommend proceeding with the standard loan application.";
-  } else {
-    return "Your credit score indicates higher risk. Consider applying for a smaller loan amount or providing additional collateral.";
+    return `With a credit score of ${creditScore}, loan options may be limited. Consider improving your credit score to access better loan terms. You may be eligible for loans up to ₹${maxEligibleAmount.toLocaleString()}.`;
   }
 };
