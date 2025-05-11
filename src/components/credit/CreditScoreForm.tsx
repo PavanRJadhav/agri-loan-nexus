@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -9,9 +10,10 @@ import { useToast } from "@/components/ui/use-toast";
 
 interface CreditScoreFormProps {
   onSubmit: (data: any) => void;
+  isLoading?: boolean;
 }
 
-const CreditScoreForm: React.FC<CreditScoreFormProps> = ({ onSubmit }) => {
+const CreditScoreForm: React.FC<CreditScoreFormProps> = ({ onSubmit, isLoading = false }) => {
   const [formData, setFormData] = useState({
     loanAmount: 5000,
     incomeSource: "farming",
@@ -69,6 +71,7 @@ const CreditScoreForm: React.FC<CreditScoreFormProps> = ({ onSubmit }) => {
               value={formData.loanAmount}
               onChange={handleInputChange}
               required
+              disabled={isLoading}
             />
           </div>
           <div className="space-y-2">
@@ -80,11 +83,16 @@ const CreditScoreForm: React.FC<CreditScoreFormProps> = ({ onSubmit }) => {
               value={formData.incomeSource}
               onChange={handleInputChange}
               required
+              disabled={isLoading}
             />
           </div>
           <div className="space-y-2">
             <Label htmlFor="farmSize">Farm Size</Label>
-            <Select onValueChange={(value) => handleSelectChange("farmSize", value)}>
+            <Select 
+              onValueChange={(value) => handleSelectChange("farmSize", value)}
+              disabled={isLoading}
+              defaultValue={formData.farmSize}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select farm size" />
               </SelectTrigger>
@@ -97,7 +105,11 @@ const CreditScoreForm: React.FC<CreditScoreFormProps> = ({ onSubmit }) => {
           </div>
           <div className="space-y-2">
             <Label htmlFor="experience">Farming Experience</Label>
-            <Select onValueChange={(value) => handleSelectChange("experience", value)}>
+            <Select 
+              onValueChange={(value) => handleSelectChange("experience", value)}
+              disabled={isLoading}
+              defaultValue={formData.experience}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select experience level" />
               </SelectTrigger>
@@ -115,13 +127,14 @@ const CreditScoreForm: React.FC<CreditScoreFormProps> = ({ onSubmit }) => {
               max={100}
               step={1}
               onValueChange={handleSliderChange}
+              disabled={isLoading}
             />
             <p className="text-sm text-muted-foreground">
               {formData.repaymentHistory}% of previous loans repaid on time.
             </p>
           </div>
-          <Button type="submit" className="w-full">
-            Calculate Credit Score
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Calculating..." : "Calculate Credit Score"}
           </Button>
         </form>
       </CardContent>
