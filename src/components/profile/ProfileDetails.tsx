@@ -1,8 +1,7 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { User, Home, Mail, Phone, Calendar, Landmark, CreditCard } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { User, CreditCard, Landmark, MapPin, Bank } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 const ProfileDetails: React.FC = () => {
@@ -89,7 +88,7 @@ const ProfileDetails: React.FC = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <Bank className="h-5 w-5 mr-2" />
+                  <Landmark className="h-5 w-5 mr-2" />
                   Preferred Lending Partner
                 </CardTitle>
               </CardHeader>

@@ -1,100 +1,65 @@
-
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Building, Phone, Mail, Globe, Percent } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import { Landmark, BanknoteIcon, CheckCircle } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
-export interface LendingPartner {
+// Fix the export declaration conflict
+interface LendingPartnerType {
   id: string;
   name: string;
   description: string;
-  contact: string;
-  phone: string;
-  website: string;
-  regions: string[];
-  status: "active" | "pending";
   interestRate: number;
-  minLoanAmount: number;
-  maxLoanAmount: number;
+  minAmount: number;
+  maxAmount: number;
+  processingTime: string;
+  requirements: string[];
 }
 
 const LendingPartnersPage: React.FC = () => {
-  const { user, updateUserData } = useAuth();
-  
-  const partners: LendingPartner[] = [
+  const { user, updateUserData, sendNotification } = useAuth();
+  const [lendingPartners, setLendingPartners] = useState<LendingPartnerType[]>([
     {
-      id: "agri-finance",
-      name: "AgriFinance Corp",
-      description: "Specializes in medium to large agricultural loans",
-      contact: "contact@agrifinance.com",
-      phone: "+91 98765 43210",
-      website: "agrifinance.com",
-      regions: ["North", "East"],
-      status: "active",
-      interestRate: 8.5,
-      minLoanAmount: 50000,
-      maxLoanAmount: 2000000
+      id: "lender-1",
+      name: "Krishi Finance",
+      description: "Specializing in loans for small farmers",
+      interestRate: 9.5,
+      minAmount: 10000,
+      maxAmount: 500000,
+      processingTime: "5-7 business days",
+      requirements: ["Land ownership documents", "Aadhar card", "Bank statement"],
     },
     {
-      id: "rural-credit",
-      name: "Rural Credit Union",
-      description: "Focused on small farmers and micro-loans",
-      contact: "support@ruralcredit.org",
-      phone: "+91 98765 43211",
-      website: "ruralcredit.org",
-      regions: ["South", "West"],
-      status: "active",
-      interestRate: 7.2,
-      minLoanAmount: 10000,
-      maxLoanAmount: 500000
+      id: "lender-2",
+      name: "Gramin Suvidha",
+      description: "Providing accessible credit to rural communities",
+      interestRate: 10.2,
+      minAmount: 5000,
+      maxAmount: 300000,
+      processingTime: "7-10 business days",
+      requirements: ["Identity proof", "Address proof", "Crop details"],
     },
     {
-      id: "harvest-fin",
-      name: "Harvest Financial",
-      description: "Specializing in equipment financing and crop loans",
-      contact: "info@harvestfin.com",
-      phone: "+91 98765 43212",
-      website: "harvestfin.com",
-      regions: ["Central", "North-East"],
-      status: "active",
-      interestRate: 9.0,
-      minLoanAmount: 25000,
-      maxLoanAmount: 1500000
+      id: "lender-3",
+      name: "Agri Sampark",
+      description: "Empowering farmers with flexible loan options",
+      interestRate: 8.9,
+      minAmount: 20000,
+      maxAmount: 700000,
+      processingTime: "3-5 business days",
+      requirements: ["Land records", "KYC documents", "Income proof"],
     },
-    {
-      id: "green-growth",
-      name: "Green Growth Investments",
-      description: "Focus on sustainable farming practices and eco-loans",
-      contact: "partnerships@greengrowth.co",
-      phone: "+91 98765 43213",
-      website: "greengrowth.co",
-      regions: ["All Regions"],
-      status: "pending",
-      interestRate: 6.8,
-      minLoanAmount: 15000,
-      maxLoanAmount: 1000000
-    },
-    {
-      id: "farm-future",
-      name: "Farm Future Finance",
-      description: "New generation agricultural credit and insurance",
-      contact: "hello@farmfuture.in",
-      phone: "+91 98765 43214",
-      website: "farmfuture.in",
-      regions: ["South", "Central"],
-      status: "active",
-      interestRate: 7.5,
-      minLoanAmount: 20000,
-      maxLoanAmount: 800000
-    }
-  ];
+  ]);
 
-  // Function for verifiers to toggle partner status
-  const togglePartnerStatus = (partnerId: string) => {
-    // In a real app, this would update a database
-    console.log(`Toggled status for partner: ${partnerId}`);
+  const handleSelectLender = (lender: LendingPartnerType) => {
+    updateUserData({ preferredLender: lender });
+    toast.success(`${lender.name} selected as preferred lender`, {
+      description: `You have chosen ${lender.name} as your preferred lending partner.`,
+    });
+    
+    // Send lender selected notification
+    sendNotification("lender_selected", { name: lender.name });
   };
 
   return (
@@ -102,70 +67,71 @@ const LendingPartnersPage: React.FC = () => {
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Lending Partners</h2>
         <p className="text-muted-foreground">
-          Manage and coordinate with our financial lending partners.
+          Choose a lending partner that best fits your financial needs
         </p>
       </div>
       
-      <div className="grid gap-4 md:grid-cols-2">
-        {partners.map((partner) => (
-          <Card key={partner.id}>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {lendingPartners.map((lender) => (
+          <Card key={lender.id} className="bg-white rounded-lg shadow-md">
             <CardHeader>
-              <div className="flex justify-between items-start">
-                <CardTitle>{partner.name}</CardTitle>
-                <Badge variant={partner.status === "active" ? "default" : "outline"}>
-                  {partner.status === "active" ? "Active" : "Pending"}
-                </Badge>
-              </div>
-              <CardDescription>
-                {partner.description}
-              </CardDescription>
+              <CardTitle className="text-lg font-semibold">{lender.name}</CardTitle>
+              <CardDescription className="text-gray-500">{lender.description}</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4">
               <div className="space-y-2">
-                <div className="flex items-center text-sm">
-                  <Percent className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <span>Interest Rate: <span className="font-semibold">{partner.interestRate}%</span></span>
-                </div>
-                <div className="flex items-center text-sm">
-                  <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <span>{partner.contact}</span>
-                </div>
-                <div className="flex items-center text-sm">
-                  <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <span>{partner.phone}</span>
-                </div>
-                <div className="flex items-center text-sm">
-                  <Globe className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <span>{partner.website}</span>
-                </div>
-                <div className="flex items-center text-sm pt-2">
-                  <Building className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <span>Regions: {partner.regions.join(", ")}</span>
-                </div>
-                
-                <div className="flex items-center text-sm pt-2">
-                  <span className="text-xs text-muted-foreground">Loan Range: ₹{partner.minLoanAmount.toLocaleString()} - ₹{partner.maxLoanAmount.toLocaleString()}</span>
-                </div>
-                
-                {user?.role === "verifier" && (
-                  <div className="pt-3">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => togglePartnerStatus(partner.id)}
-                    >
-                      {partner.status === "active" ? "Set Pending" : "Activate Partner"}
-                    </Button>
-                  </div>
-                )}
+                <p className="text-sm">
+                  <span className="font-medium">Interest Rate:</span> {lender.interestRate}%
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">Loan Amount:</span> ₹{lender.minAmount.toLocaleString()} - ₹{lender.maxAmount.toLocaleString()}
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">Processing Time:</span> {lender.processingTime}
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">Requirements:</span>
+                  <ul className="list-disc pl-5">
+                    {lender.requirements.map((req, index) => (
+                      <li key={index}>{req}</li>
+                    ))}
+                  </ul>
+                </p>
               </div>
+              <Button 
+                className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white"
+                onClick={() => handleSelectLender(lender)}
+              >
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Select This Lender
+              </Button>
             </CardContent>
           </Card>
         ))}
       </div>
+      
+      {user?.preferredLender && (
+        <Card className="bg-white rounded-lg shadow-md">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold">Your Preferred Lender</CardTitle>
+            <CardDescription className="text-gray-500">
+              You have selected {user.preferredLender.name} as your preferred lending partner.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-4">
+            <div className="space-y-2">
+              <p className="text-sm">
+                <span className="font-medium">Interest Rate:</span> {user.preferredLender.interestRate}%
+              </p>
+              <p className="text-sm">
+                <span className="font-medium">Description:</span> {user.preferredLender.description}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
 
 export default LendingPartnersPage;
-export { type LendingPartner };

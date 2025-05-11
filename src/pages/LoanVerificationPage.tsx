@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle, XCircle } from "lucide-react";
 
 const LoanVerificationPage: React.FC = () => {
-  const { user, addTransaction } = useAuth();
+  const { user, addTransaction, sendNotification } = useAuth();
   
   // Process all loans from all users
   const getAllPendingLoans = () => {
@@ -54,6 +53,10 @@ const LoanVerificationPage: React.FC = () => {
     
     if (!userData.loans) return;
     
+    // Find the loan by ID
+    const loan = userData.loans.find((loan: any) => loan.id === loanId);
+    if (!loan) return;
+    
     // Update the loan status
     const updatedLoans = userData.loans.map((loan: any) => 
       loan.id === loanId ? { ...loan, status: 'approved' } : loan
@@ -82,6 +85,13 @@ const LoanVerificationPage: React.FC = () => {
     toast.success("Loan approved successfully", {
       description: `Loan for ${userEmail} has been approved and funds have been disbursed.`
     });
+    
+    // Send email notification
+    sendNotification("loan_approved", {
+      type: loan.type,
+      amount: loan.amount,
+      email: userEmail
+    });
   };
   
   const handleRejectLoan = (userEmail: string, loanId: string) => {
@@ -90,6 +100,10 @@ const LoanVerificationPage: React.FC = () => {
     const userData = JSON.parse(localStorage.getItem(userDataKey) || '{}');
     
     if (!userData.loans) return;
+    
+    // Find the loan by ID
+    const loan = userData.loans.find((loan: any) => loan.id === loanId);
+    if (!loan) return;
     
     // Update the loan status
     const updatedLoans = userData.loans.map((loan: any) => 
@@ -114,6 +128,12 @@ const LoanVerificationPage: React.FC = () => {
     
     toast.error("Loan rejected", {
       description: `Loan for ${userEmail} has been rejected.`
+    });
+    
+    // Send email notification
+    sendNotification("loan_rejected", {
+      type: loan.type,
+      email: userEmail
     });
   };
 

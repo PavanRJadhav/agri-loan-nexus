@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { sendEmailNotification, getNotificationTemplates } from "@/services/NotificationService";
 
 export type UserRole = "farmer" | "admin" | "verifier";
 
@@ -54,6 +55,7 @@ interface AuthContextType {
   getUserFinancialData: () => UserFinancialData | undefined;
   addLoanApplication: (loan: Omit<LoanApplication, "id" | "submittedAt" | "status">) => void;
   addTransaction: (transaction: Omit<Transaction, "id" | "date">) => void;
+  sendNotification: (type: string, data: any) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -61,7 +63,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
+  
   // Check for stored user on initial load
   useEffect(() => {
     const storedUser = localStorage.getItem("agriloan_user");
@@ -93,6 +95,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false);
   }, []);
 
+  // Send notification based on type and data
+  const sendNotification = async (type: string, data: any) => {
+    if (!user?.email) return;
+    
+    const templates = getNotificationTemplates();
+    let emailContent;
+    
+    switch(type) {
+      case "loan_application":
+        emailContent = templates.loanApplication(user.name, data.type, data.amount);
+        break;
+      case "loan_approved":
+        emailContent = templates.loanApproved(user.name, data.type, data.amount);
+        break;
+      case "loan_rejected":
+        emailContent = templates.loanRejected(user.name, data.type);
+        break;
+      case "lender_selected":
+        emailContent = templates.lenderSelected(user.name, data.name);
+        break;
+      case "profile_updated":
+        emailContent = templates.profileUpdated(user.name);
+        break;
+      default:
+        return;
+    }
+    
+    await sendEmailNotification({
+      to: user.email,
+      subject: emailContent.subject,
+      body: emailContent.body
+    });
+  };
+
   const updateUserData = (data: Partial<User>) => {
     if (!user) return;
     
@@ -120,6 +156,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
       
       localStorage.setItem(userDataKey, JSON.stringify(updatedUserData));
+      
+      // Send profile updated notification
+      sendNotification("profile_updated", {});
     }
   };
 
@@ -169,6 +208,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       parsedData.loans = updatedLoans;
       localStorage.setItem(userDataKey, JSON.stringify(parsedData));
     }
+    
+    // Send loan application notification
+    sendNotification("loan_application", loan);
   };
 
   const addTransaction = (transaction: Omit<Transaction, "id" | "date">) => {
@@ -308,7 +350,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       updateUserData,
       getUserFinancialData,
       addLoanApplication,
-      addTransaction
+      addTransaction,
+      sendNotification
     }}>
       {children}
     </AuthContext.Provider>

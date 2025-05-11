@@ -1,13 +1,41 @@
-
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 const SettingsPage: React.FC = () => {
+  const { user, sendNotification } = useAuth();
+  const [notificationSettings, setNotificationSettings] = useState({
+    loanUpdates: true,
+    paymentReminders: true,
+    newFeatures: false,
+    marketUpdates: true,
+    emailNotifications: true
+  });
+  
+  const handleSaveNotificationPreferences = () => {
+    toast.success("Notification preferences saved", {
+      description: "Your notification preferences have been updated successfully."
+    });
+    
+    // Send profile updated notification if email notifications are enabled
+    if (notificationSettings.emailNotifications) {
+      sendNotification("profile_updated", {});
+    }
+  };
+  
+  const handleToggleEmailNotifications = (checked: boolean) => {
+    setNotificationSettings({
+      ...notificationSettings,
+      emailNotifications: checked
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -91,33 +119,55 @@ const SettingsPage: React.FC = () => {
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
+                  <p className="font-medium">Email Notifications</p>
+                  <p className="text-sm text-muted-foreground">Receive important updates via email</p>
+                </div>
+                <Switch 
+                  checked={notificationSettings.emailNotifications} 
+                  onCheckedChange={handleToggleEmailNotifications} 
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
                   <p className="font-medium">Loan Updates</p>
                   <p className="text-sm text-muted-foreground">Receive updates about your loan applications</p>
                 </div>
-                <Switch defaultChecked />
+                <Switch 
+                  defaultChecked={notificationSettings.loanUpdates} 
+                  onCheckedChange={(checked) => setNotificationSettings({...notificationSettings, loanUpdates: checked})}
+                />
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Payment Reminders</p>
                   <p className="text-sm text-muted-foreground">Get notified before payments are due</p>
                 </div>
-                <Switch defaultChecked />
+                <Switch 
+                  defaultChecked={notificationSettings.paymentReminders} 
+                  onCheckedChange={(checked) => setNotificationSettings({...notificationSettings, paymentReminders: checked})}
+                />
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">New Features</p>
                   <p className="text-sm text-muted-foreground">Learn about new products and features</p>
                 </div>
-                <Switch />
+                <Switch 
+                  defaultChecked={notificationSettings.newFeatures} 
+                  onCheckedChange={(checked) => setNotificationSettings({...notificationSettings, newFeatures: checked})}
+                />
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Market Updates</p>
                   <p className="text-sm text-muted-foreground">Receive updates about market prices</p>
                 </div>
-                <Switch defaultChecked />
+                <Switch 
+                  defaultChecked={notificationSettings.marketUpdates} 
+                  onCheckedChange={(checked) => setNotificationSettings({...notificationSettings, marketUpdates: checked})}
+                />
               </div>
-              <Button className="mt-2">Save Preferences</Button>
+              <Button className="mt-2" onClick={handleSaveNotificationPreferences}>Save Preferences</Button>
             </CardContent>
           </Card>
         </TabsContent>

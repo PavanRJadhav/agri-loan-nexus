@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CreditCard, BarChart, ArrowUp, CalendarDays, FileText, PlusCircle, Bank } from "lucide-react";
+import { CreditCard, BarChart, ArrowUp, CalendarDays, FileText, PlusCircle, Landmark, BanknoteIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import StatCard from "./StatCard";
@@ -64,7 +64,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ userName }) => {
           title="Preferred Lender"
           value={user?.preferredLender?.name || "Not selected"}
           description={user?.preferredLender?.interestRate ? `${user.preferredLender.interestRate}% interest rate` : "Choose a lending partner"}
-          icon={Bank}
+          icon={Landmark}
           link={user?.preferredLender ? "/profile" : "/lenders"}
         />
       </div>
