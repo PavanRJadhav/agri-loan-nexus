@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -5,13 +6,32 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAuth } from "@/contexts/AuthContext";
 import { Building } from "lucide-react";
 import { LendingPartnerType } from "@/pages/LendingPartnersPage";
+import { useToast } from "@/components/ui/use-toast";
 
 const LenderSelection: React.FC = () => {
-  const { user, updateUserData } = useAuth();
+  const { user, updateUserData, sendNotification } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleLenderSelection = (lender: LendingPartnerType) => {
-    updateUserData({ preferredLender: lender });
+    updateUserData({ 
+      preferredLender: {
+        id: lender.id,
+        name: lender.name,
+        interestRate: lender.interestRate
+      } 
+    });
+    
+    // Send notification
+    sendNotification("lender_selected", {
+      name: lender.name
+    });
+    
+    toast({
+      title: "Lender Selected",
+      description: `You've selected ${lender.name} as your preferred lender.`,
+    });
+    
     navigate("/dashboard");
   };
 
@@ -61,7 +81,7 @@ const LenderSelection: React.FC = () => {
             <CardContent>
               <p>Interest Rate: {lender.interestRate}%</p>
               <p>Loan Amount: ₹{lender.minAmount} - ₹{lender.maxAmount}</p>
-              <Button onClick={() => handleLenderSelection(lender)}>
+              <Button onClick={() => handleLenderSelection(lender)} className="mt-4">
                 <Building className="mr-2 h-4 w-4" />
                 Select Lender
               </Button>

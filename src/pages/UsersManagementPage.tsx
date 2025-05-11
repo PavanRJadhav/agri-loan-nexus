@@ -1,11 +1,48 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import UserActivityItem from "@/components/dashboard/UserActivityItem";
+import { User } from "@/contexts/AuthContext";
 
 const UsersManagementPage: React.FC = () => {
   const { user } = useAuth();
+  const [loggedInUsers, setLoggedInUsers] = useState<User[]>([]);
+  
+  useEffect(() => {
+    // Get all users from local storage
+    const getAllUsers = () => {
+      const users: User[] = [];
+      // Loop through localStorage to find all users
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith("agriloan_userdata_")) {
+          try {
+            const email = key.replace("agriloan_userdata_", "");
+            const userData = JSON.parse(localStorage.getItem(key) || "{}");
+            
+            if (userData.name && email) {
+              users.push({
+                id: userData.id || `user-${Math.random().toString(36).substring(2, 9)}`,
+                name: userData.name,
+                email: email,
+                role: userData.role || "farmer",
+                financialData: userData.financialData,
+                loans: userData.loans || [],
+                transactions: userData.transactions || [],
+                preferredLender: userData.preferredLender
+              });
+            }
+          } catch (error) {
+            console.error("Error parsing user data:", error);
+          }
+        }
+      }
+      return users;
+    };
+    
+    setLoggedInUsers(getAllUsers());
+  }, []);
   
   return (
     <div className="space-y-6">
@@ -25,53 +62,22 @@ const UsersManagementPage: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <UserActivityItem
-              initials="JD"
-              name="John Doe"
-              role="Farmer"
-              activity="Account created on May 8, 2025"
-              bgColor="bg-agriloan-primary"
-            />
-            
-            <UserActivityItem
-              initials="MS"
-              name="Maria Singh"
-              role="Verifier" 
-              activity="Last active 30 minutes ago"
-              bgColor="bg-agriloan-secondary"
-            />
-            
-            <UserActivityItem
-              initials="RK"
-              name="Raj Kumar"
-              role="Farmer"
-              activity="3 loan applications"
-              bgColor="bg-agriloan-accent"
-            />
-            
-            <UserActivityItem
-              initials="AP"
-              name="Anika Patel"
-              role="Farmer"
-              activity="1 approved loan"
-              bgColor="bg-agriloan-primary" 
-            />
-
-            <UserActivityItem
-              initials="VG"
-              name="Vikram Gupta"
-              role="Farmer"
-              activity="New registration today"
-              bgColor="bg-agriloan-secondary" 
-            />
-
-            <UserActivityItem
-              initials="SK"
-              name="Sarah Khan"
-              role="Verifier"
-              activity="Verified 12 applications"
-              bgColor="bg-agriloan-accent" 
-            />
+            {loggedInUsers.length > 0 ? (
+              loggedInUsers.map((user, index) => (
+                <UserActivityItem
+                  key={user.id}
+                  initials={user.name.split(" ").map(n => n[0]).join("")}
+                  name={user.name}
+                  role={user.role}
+                  activity={user.loans && user.loans.length > 0 
+                    ? `${user.loans.length} loan application(s)` 
+                    : "No loan applications yet"}
+                  bgColor={`bg-agriloan-${index % 3 === 0 ? "primary" : index % 3 === 1 ? "secondary" : "accent"}`}
+                />
+              ))
+            ) : (
+              <p className="text-center py-6 text-muted-foreground">No users registered yet</p>
+            )}
           </div>
         </CardContent>
       </Card>

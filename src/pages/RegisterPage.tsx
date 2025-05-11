@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/components/ui/use-toast";
-import { CreditCard, ArrowLeft } from "lucide-react";
+import { CreditCard, ArrowLeft, User, Lock, Mail, Shield } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -30,10 +30,17 @@ const RegisterPage: React.FC = () => {
   const [loanAmount, setLoanAmount] = useState("");
   const [incomeSource, setIncomeSource] = useState("agriculture");
   const [farmSize, setFarmSize] = useState("");
+  const [aadharNumber, setAadharNumber] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const { register } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const validateAadhar = (aadhar: string) => {
+    // Check if Aadhar is 12 digits
+    const aadharRegex = /^\d{12}$/;
+    return aadharRegex.test(aadhar);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,19 +51,38 @@ const RegisterPage: React.FC = () => {
       return;
     }
 
-    // For farmers, validate financial information
+    // For farmers, validate financial information and Aadhar
     if (role === "farmer" && currentPage === 1) {
       setCurrentPage(2);
       return;
     }
 
-    if (role === "farmer" && !currentBalance) {
-      setError("Please enter your current balance");
-      return;
-    }
+    if (role === "farmer") {
+      if (!currentBalance) {
+        setError("Please enter your current balance");
+        return;
+      }
 
-    if (role === "farmer" && !loanAmount) {
-      setError("Please enter desired loan amount");
+      if (!loanAmount) {
+        setError("Please enter desired loan amount");
+        return;
+      }
+
+      if (!aadharNumber) {
+        setError("Please enter your Aadhar number");
+        return;
+      }
+
+      if (!validateAadhar(aadharNumber)) {
+        setError("Please enter a valid 12-digit Aadhar number");
+        return;
+      }
+    }
+    
+    // Check if user already exists
+    const existingUserData = localStorage.getItem(`agriloan_userdata_${email}`);
+    if (existingUserData) {
+      setError("An account with this email already exists. Please sign in instead.");
       return;
     }
     
@@ -72,6 +98,7 @@ const RegisterPage: React.FC = () => {
         loanAmount: role === "farmer" ? parseFloat(loanAmount) : 0,
         incomeSource: role === "farmer" ? incomeSource : "",
         farmSize: role === "farmer" ? farmSize : "",
+        aadharNumber: role === "farmer" ? aadharNumber : "",
         registrationDate: new Date().toISOString(),
         loans: [],
         transactions: []
@@ -140,7 +167,10 @@ const RegisterPage: React.FC = () => {
               {currentPage === 1 ? (
                 <>
                   <div className="space-y-1">
-                    <Label htmlFor="name">Full Name</Label>
+                    <Label htmlFor="name" className="flex items-center gap-1">
+                      <User className="h-4 w-4" />
+                      Full Name
+                    </Label>
                     <Input
                       id="name"
                       type="text"
@@ -151,7 +181,10 @@ const RegisterPage: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="email">Email address</Label>
+                    <Label htmlFor="email" className="flex items-center gap-1">
+                      <Mail className="h-4 w-4" />
+                      Email address
+                    </Label>
                     <Input
                       id="email"
                       type="email"
@@ -162,7 +195,10 @@ const RegisterPage: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password" className="flex items-center gap-1">
+                      <Lock className="h-4 w-4" />
+                      Password
+                    </Label>
                     <Input
                       id="password"
                       type="password"
@@ -174,7 +210,10 @@ const RegisterPage: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="confirmPassword">Confirm Password</Label>
+                    <Label htmlFor="confirmPassword" className="flex items-center gap-1">
+                      <Shield className="h-4 w-4" />
+                      Confirm Password
+                    </Label>
                     <Input
                       id="confirmPassword"
                       type="password"
@@ -205,6 +244,22 @@ const RegisterPage: React.FC = () => {
                 </>
               ) : (
                 <>
+                  <div className="space-y-1">
+                    <Label htmlFor="aadharNumber" className="flex items-center gap-1">
+                      <Shield className="h-4 w-4" /> 
+                      Aadhar Number
+                    </Label>
+                    <Input
+                      id="aadharNumber"
+                      type="text" 
+                      placeholder="Enter your 12-digit Aadhar number"
+                      value={aadharNumber}
+                      onChange={(e) => setAadharNumber(e.target.value.replace(/\D/g, '').substring(0, 12))}
+                      required
+                      maxLength={12}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Your 12-digit Aadhar number will be used for verification</p>
+                  </div>
                   <div className="space-y-1">
                     <Label htmlFor="currentBalance">Current Balance (₹)</Label>
                     <Input

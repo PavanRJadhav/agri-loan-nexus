@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreditCard, Users, ArrowUp, CalendarDays } from "lucide-react";
 import StatCard from "./StatCard";
@@ -9,73 +9,60 @@ import { useAuth, User, LoanApplication } from "@/contexts/AuthContext";
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
+  const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [allLoans, setAllLoans] = useState<{id: string, loan: LoanApplication, userName: string}[]>([]);
   
-  // This would be replaced with actual data in a real application
-  const mockUsers: User[] = [
-    {
-      id: "user-1",
-      name: "John Doe",
-      email: "john@example.com",
-      role: "farmer",
-    },
-    {
-      id: "user-2",
-      name: "Maria Singh",
-      email: "maria@example.com",
-      role: "verifier",
-    },
-    {
-      id: "user-3",
-      name: "Raj Kumar",
-      email: "raj@example.com",
-      role: "farmer",
-    },
-    {
-      id: "user-4",
-      name: "Anika Patel",
-      email: "anika@example.com",
-      role: "farmer",
+  useEffect(() => {
+    // Get all users and their loans from localStorage
+    const users: User[] = [];
+    const loans: {id: string, loan: LoanApplication, userName: string}[] = [];
+    
+    // Loop through localStorage to find all users
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith("agriloan_userdata_")) {
+        try {
+          const email = key.replace("agriloan_userdata_", "");
+          const userData = JSON.parse(localStorage.getItem(key) || "{}");
+          
+          if (userData.name && email) {
+            const userObj: User = {
+              id: userData.id || `user-${Math.random().toString(36).substring(2, 9)}`,
+              name: userData.name,
+              email: email,
+              role: userData.role || "farmer",
+              financialData: userData.financialData,
+              loans: userData.loans || [],
+              transactions: userData.transactions || [],
+              preferredLender: userData.preferredLender
+            };
+            
+            users.push(userObj);
+            
+            // Add all loans from this user
+            if (userData.loans && userData.loans.length > 0) {
+              userData.loans.forEach((loan: LoanApplication) => {
+                loans.push({
+                  id: `${userObj.id}-${loan.id}`,
+                  loan,
+                  userName: userData.name
+                });
+              });
+            }
+          }
+        } catch (error) {
+          console.error("Error parsing user data:", error);
+        }
+      }
     }
-  ];
-  
-  const mockApplications: LoanApplication[] = [
-    {
-      id: "app-1",
-      type: "Crop Loan",
-      amount: 15000,
-      purpose: "Seasonal crop financing",
-      status: "pending",
-      submittedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() // 1 day ago
-    },
-    {
-      id: "app-2",
-      type: "Equipment Purchase",
-      amount: 25000,
-      purpose: "Tractor purchase",
-      status: "approved",
-      submittedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() // 2 days ago
-    },
-    {
-      id: "app-3",
-      type: "Irrigation System",
-      amount: 50000,
-      purpose: "Modern irrigation installation",
-      status: "pending",
-      submittedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() // 3 days ago
-    },
-    {
-      id: "app-4",
-      type: "Seed Purchase",
-      amount: 8000,
-      purpose: "High-yield seed variety",
-      status: "rejected",
-      submittedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString() // 4 days ago
-    }
-  ];
+    
+    setAllUsers(users);
+    setAllLoans(loans);
+  }, []);
 
   // Calculate approval rate
-  const approvedApplications = mockApplications.filter(app => app.status === "approved").length;
-  const approvalRate = Math.round((approvedApplications / mockApplications.length) * 100);
+  const approvedApplications = allLoans.filter(item => item.loan.status === "approved").length;
+  const approvalRate = allLoans.length > 0 ? Math.round((approvedApplications / allLoans.length) * 100) : 0;
 
   // Calculate average processing time (dummy value for demo)
   const avgProcessingDays = 3.2;
@@ -92,22 +79,22 @@ const AdminDashboard: React.FC = () => {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Applications"
-          value={mockApplications.length.toString()}
-          description="+12% from last month"
+          value={allLoans.length.toString()}
+          description={`${allLoans.length > 0 ? '+' : ''}${allLoans.length} applications`}
           icon={CreditCard}
         />
         
         <StatCard
           title="Total Users"
-          value={mockUsers.length.toString()}
-          description="+5 new today"
+          value={allUsers.length.toString()}
+          description={`${allUsers.filter(u => u.role === "farmer").length} farmers`}
           icon={Users}
         />
         
         <StatCard
           title="Approval Rate"
           value={`${approvalRate}%`}
-          description="+4% from last month"
+          description={`${approvedApplications} approved`}
           icon={ArrowUp}
           descriptionColor="text-green-600"
         />
@@ -115,7 +102,7 @@ const AdminDashboard: React.FC = () => {
         <StatCard
           title="Average Processing"
           value={`${avgProcessingDays} days`}
-          description="-0.5 days from last month"
+          description="Target: 2 days"
           icon={CalendarDays}
           descriptionColor="text-green-600"
         />
@@ -131,27 +118,31 @@ const AdminDashboard: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {mockApplications.map((app, i) => {
-                let statusColor = "";
-                if (app.status === "pending") statusColor = "bg-yellow-100 text-yellow-800";
-                else if (app.status === "approved") statusColor = "bg-green-100 text-green-800";
-                else if (app.status === "rejected") statusColor = "bg-red-100 text-red-800";
-                
-                const daysAgo = Math.floor((Date.now() - new Date(app.submittedAt).getTime()) / (24 * 60 * 60 * 1000));
-                
-                return (
-                  <ApplicationItem
-                    key={app.id}
-                    id={parseInt(app.id.replace("app-", ""))}
-                    title={`Application #${app.id.replace("app-", "")}`}
-                    date={`Submitted ${daysAgo} day${daysAgo > 1 ? 's' : ''} ago`}
-                    status={app.status.charAt(0).toUpperCase() + app.status.slice(1)}
-                    statusColor={statusColor}
-                    amount={`₹${app.amount.toLocaleString()}`}
-                    type={app.type}
-                  />
-                );
-              })}
+              {allLoans.length > 0 ? (
+                allLoans.slice(0, 5).map((item) => {
+                  let statusColor = "";
+                  if (item.loan.status === "pending") statusColor = "bg-yellow-100 text-yellow-800";
+                  else if (item.loan.status === "approved") statusColor = "bg-green-100 text-green-800";
+                  else if (item.loan.status === "rejected") statusColor = "bg-red-100 text-red-800";
+                  
+                  const daysAgo = Math.floor((Date.now() - new Date(item.loan.submittedAt).getTime()) / (24 * 60 * 60 * 1000));
+                  
+                  return (
+                    <ApplicationItem
+                      key={item.id}
+                      id={parseInt(item.loan.id.replace("loan-", ""))}
+                      title={`${item.userName}'s ${item.loan.type}`}
+                      date={`Submitted ${daysAgo} day${daysAgo !== 1 ? 's' : ''} ago`}
+                      status={item.loan.status.charAt(0).toUpperCase() + item.loan.status.slice(1)}
+                      statusColor={statusColor}
+                      amount={`₹${item.loan.amount.toLocaleString()}`}
+                      type={item.loan.type}
+                    />
+                  );
+                })
+              ) : (
+                <p className="text-center py-6 text-muted-foreground">No loan applications yet</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -165,19 +156,22 @@ const AdminDashboard: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {mockUsers.map((user, i) => (
-                <UserActivityItem
-                  key={user.id}
-                  initials={user.name.split(" ").map(n => n[0]).join("")}
-                  name={user.name}
-                  role={user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                  activity={i === 0 ? "Registered 2h ago" : 
-                           i === 1 ? "Logged in 30m ago" : 
-                           i === 2 ? "Applied for loan 1h ago" : 
-                           "Updated profile 4h ago"}
-                  bgColor={`bg-agriloan-${i % 2 === 0 ? "primary" : "secondary"}`}
-                />
-              ))}
+              {allUsers.length > 0 ? (
+                allUsers.slice(0, 5).map((user, i) => (
+                  <UserActivityItem
+                    key={user.id}
+                    initials={user.name.split(" ").map(n => n[0]).join("")}
+                    name={user.name}
+                    role={user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                    activity={user.loans && user.loans.length > 0 
+                      ? `${user.loans.length} loan application(s)` 
+                      : "No loan applications yet"}
+                    bgColor={`bg-agriloan-${i % 3 === 0 ? "primary" : i % 3 === 1 ? "secondary" : "accent"}`}
+                  />
+                ))
+              ) : (
+                <p className="text-center py-6 text-muted-foreground">No users registered yet</p>
+              )}
             </div>
           </CardContent>
         </Card>
