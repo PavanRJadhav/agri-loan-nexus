@@ -72,47 +72,61 @@ export const calculateCreditScore = (factors: CreditScoreFactors): CreditScoreRe
   const loanAmountFactor = Math.min(100, Math.max(-100, (500000 - factors.loanAmount) / 10000));
   score += loanAmountFactor;
 
-  // Other factors
-  switch (mappedFactors.cropYields) {
-    case 'high': score += 100; break;
-    case 'medium': score += 50; break;
-    case 'low': score -= 50; break;
+  // Other factors - Fixed TypeScript errors by removing direct comparisons
+  if (mappedFactors.cropYields === 'high') {
+    score += 100; 
+  } else if (mappedFactors.cropYields === 'medium') {
+    score += 50;
+  } else if (mappedFactors.cropYields === 'low') {
+    score -= 50;
   }
 
-  switch (mappedFactors.landOwnership) {
-    case 'owned': score += 80; break;
-    case 'leased': score -= 30; break;
-    case 'partial': score += 40; break;
+  if (mappedFactors.landOwnership === 'owned') {
+    score += 80;
+  } else if (mappedFactors.landOwnership === 'leased') {
+    score -= 30;
+  } else if (mappedFactors.landOwnership === 'partial') {
+    score += 40;
   }
 
-  switch (mappedFactors.existingLoans) {
-    case 'none': score += 100; break;
-    case 'few': score += 30; break;
-    case 'many': score -= 70; break;
+  if (mappedFactors.existingLoans === 'none') {
+    score += 100;
+  } else if (mappedFactors.existingLoans === 'few') {
+    score += 30;
+  } else if (mappedFactors.existingLoans === 'many') {
+    score -= 70;
   }
 
-  switch (mappedFactors.marketVolatility) {
-    case 'stable': score += 50; break;
-    case 'moderate': score -= 20; break;
-    case 'volatile': score -= 80; break;
+  if (mappedFactors.marketVolatility === 'stable') {
+    score += 50;
+  } else if (mappedFactors.marketVolatility === 'moderate') {
+    score -= 20;
+  } else if (mappedFactors.marketVolatility === 'volatile') {
+    score -= 80;
   }
 
-  switch (mappedFactors.weatherImpact) {
-    case 'minimal': score += 40; break;
-    case 'moderate': score -= 10; break;
-    case 'severe': score -= 50; break;
+  if (mappedFactors.weatherImpact === 'minimal') {
+    score += 40;
+  } else if (mappedFactors.weatherImpact === 'moderate') {
+    score -= 10;
+  } else if (mappedFactors.weatherImpact === 'severe') {
+    score -= 50;
   }
 
-  switch (mappedFactors.incomeStability) {
-    case 'stable': score += 70; break;
-    case 'seasonal': score += 20; break;
-    case 'volatile': score -= 40; break;
+  if (mappedFactors.incomeStability === 'stable') {
+    score += 70;
+  } else if (mappedFactors.incomeStability === 'seasonal') {
+    score += 20;
+  } else if (mappedFactors.incomeStability === 'volatile') {
+    score -= 40;
   }
 
-  switch (mappedFactors.insuranceCoverage) {
-    case 'high': score += 50; break;
-    case 'partial': score += 20; break;
-    case 'none': score -= 30; break;
+  if (mappedFactors.insuranceCoverage === 'high') {
+    score += 50;
+  } else if (mappedFactors.insuranceCoverage === 'partial') {
+    score += 20;
+  } else if (mappedFactors.insuranceCoverage === 'none') {
+    score -= 30;
   }
 
   // Cap the score between 300 and 850
