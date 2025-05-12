@@ -27,93 +27,90 @@ import AnalyticsPage from "./pages/AnalyticsPage";
 import LendingPartnersPage from "./pages/LendingPartnersPage";
 import LenderSelection from "./components/loans/LenderSelection";
 
-// Create a new QueryClient instance outside of the component
-const queryClient = new QueryClient();
-
-// Update the App component to be a function declaration with explicit React.FC type
-const App: React.FC = () => {
+// Create a new QueryClient instance inside the component
+function App() {
+  const queryClient = new QueryClient();
+  
   return (
-    <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <AuthProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                {/* Public routes */}
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
-                <Route path="/unauthorized" element={<UnauthorizedPage />} />
-                
-                {/* Protected routes for all roles */}
-                <Route path="/dashboard" element={<MainLayout />}>
-                  <Route index element={<DashboardPage />} />
-                </Route>
-                
-                {/* Protected farmer routes */}
-                <Route path="/loan-applications" element={<MainLayout requiredRole="farmer" />}>
-                  <Route index element={<Navigate to="/dashboard" replace />} />
-                  <Route path="new" element={<LoanApplicationPage />} />
-                </Route>
-                
-                <Route path="/credit-cards" element={<MainLayout requiredRole="farmer" />}>
-                  <Route index element={<CreditCardsPage />} />
-                </Route>
-                
-                <Route path="/transactions" element={<MainLayout requiredRole="farmer" />}>
-                  <Route index element={<TransactionsPage />} />
-                </Route>
-                
-                <Route path="/support" element={<MainLayout requiredRole="farmer" />}>
-                  <Route index element={<SupportChatPage />} />
-                </Route>
-                
-                <Route path="/lenders" element={<MainLayout requiredRole="farmer" />}>
-                  <Route index element={<LenderSelection />} />
-                </Route>
-                
-                {/* Settings and Profile routes available for all roles */}
-                <Route path="/settings" element={<MainLayout />}>
-                  <Route index element={<SettingsPage />} />
-                </Route>
-                
-                <Route path="/profile" element={<MainLayout />}>
-                  <Route index element={<ProfilePage />} />
-                </Route>
-                
-                {/* Protected admin routes */}
-                <Route path="/all-applications" element={<MainLayout requiredRole="admin" />}>
-                  <Route index element={<AllApplicationsPage />} />
-                </Route>
-                
-                <Route path="/users" element={<MainLayout requiredRole="admin" />}>
-                  <Route index element={<UsersManagementPage />} />
-                </Route>
-                
-                <Route path="/analytics" element={<MainLayout requiredRole="admin" />}>
-                  <Route index element={<AnalyticsPage />} />
-                </Route>
-                
-                {/* Protected verifier routes */}
-                <Route path="/verify-applications" element={<MainLayout requiredRole="verifier" />}>
-                  <Route index element={<LoanVerificationPage />} />
-                </Route>
-                
-                <Route path="/partners" element={<MainLayout requiredRole="verifier" />}>
-                  <Route index element={<LendingPartnersPage />} />
-                </Route>
-                
-                {/* Catch-all route */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </AuthProvider>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <AuthProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/unauthorized" element={<UnauthorizedPage />} />
+              
+              {/* Protected routes for all roles */}
+              <Route path="/dashboard" element={<MainLayout />}>
+                <Route index element={<DashboardPage />} />
+              </Route>
+              
+              {/* Protected farmer routes */}
+              <Route path="/loan-applications" element={<MainLayout requiredRole="farmer" />}>
+                <Route index element={<Navigate to="/dashboard" replace />} />
+                <Route path="new" element={<LoanApplicationPage />} />
+              </Route>
+              
+              <Route path="/credit-cards" element={<MainLayout requiredRole="farmer" />}>
+                <Route index element={<CreditCardsPage />} />
+              </Route>
+              
+              <Route path="/transactions" element={<MainLayout requiredRole="farmer" />}>
+                <Route index element={<TransactionsPage />} />
+              </Route>
+              
+              <Route path="/support" element={<MainLayout requiredRole="farmer" />}>
+                <Route index element={<SupportChatPage />} />
+              </Route>
+              
+              <Route path="/lenders" element={<MainLayout requiredRole="farmer" />}>
+                <Route index element={<LenderSelection />} />
+              </Route>
+              
+              {/* Settings and Profile routes available for all roles */}
+              <Route path="/settings" element={<MainLayout />}>
+                <Route index element={<SettingsPage />} />
+              </Route>
+              
+              <Route path="/profile" element={<MainLayout />}>
+                <Route index element={<ProfilePage />} />
+              </Route>
+              
+              {/* Protected admin routes */}
+              <Route path="/all-applications" element={<MainLayout requiredRole="admin" />}>
+                <Route index element={<AllApplicationsPage />} />
+              </Route>
+              
+              <Route path="/users" element={<MainLayout requiredRole="admin" />}>
+                <Route index element={<UsersManagementPage />} />
+              </Route>
+              
+              <Route path="/analytics" element={<MainLayout requiredRole="admin" />}>
+                <Route index element={<AnalyticsPage />} />
+              </Route>
+              
+              {/* Protected verifier routes */}
+              <Route path="/verify-applications" element={<MainLayout requiredRole="verifier" />}>
+                <Route index element={<LoanVerificationPage />} />
+              </Route>
+              
+              <Route path="/partners" element={<MainLayout requiredRole="verifier" />}>
+                <Route index element={<LendingPartnersPage />} />
+              </Route>
+              
+              {/* Catch-all route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
-};
+}
 
 export default App;
