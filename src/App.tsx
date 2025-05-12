@@ -26,10 +26,11 @@ import UsersManagementPage from "./pages/UsersManagementPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import LendingPartnersPage from "./pages/LendingPartnersPage";
 import LenderSelection from "./components/loans/LenderSelection";
+import RepayLoanPage from "./pages/RepayLoanPage";
 
 // Create a new QueryClient instance inside the component
 function App() {
-  const queryClient = new QueryClient();
+  const queryClient = React.useState(() => new QueryClient())[0];
   
   return (
     <QueryClientProvider client={queryClient}>
@@ -70,6 +71,10 @@ function App() {
               
               <Route path="/lenders" element={<MainLayout requiredRole="farmer" />}>
                 <Route index element={<LenderSelection />} />
+              </Route>
+              
+              <Route path="/repay-loan" element={<MainLayout requiredRole="farmer" />}>
+                <Route index element={<RepayLoanPage />} />
               </Route>
               
               {/* Settings and Profile routes available for all roles */}

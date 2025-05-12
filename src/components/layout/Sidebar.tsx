@@ -13,7 +13,8 @@ import {
   UserCheck,
   Building,
   BarChart4,
-  User
+  User,
+  BanknoteIcon
 } from "lucide-react";
 
 const Sidebar: React.FC = () => {
@@ -27,6 +28,7 @@ const Sidebar: React.FC = () => {
     
     const farmerLinks = [
       { name: "Loan Applications", icon: FileText, path: "/loan-applications/new" },
+      { name: "Repay Loan", icon: BanknoteIcon, path: "/repay-loan" },
       { name: "Credit Cards", icon: CreditCard, path: "/credit-cards" },
       { name: "Transactions", icon: PieChart, path: "/transactions" },
       { name: "Support Chat", icon: MessageSquare, path: "/support" },

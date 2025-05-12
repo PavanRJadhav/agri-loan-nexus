@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import StatCard from "./StatCard";
 import ApplicationItem from "./ApplicationItem";
 import CreditCardDisplay from "./CreditCardDisplay";
+import CreditScoreBoard from "./CreditScoreBoard";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface FarmerDashboardProps {
@@ -158,42 +159,16 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ userName }) => {
                 </Link>
               </Button>
               <Button variant="outline" className="flex-1" asChild>
-                <Link to="/loan-applications">
-                  View All Applications
+                <Link to="/repay-loan">
+                  <BanknoteIcon className="mr-2 h-4 w-4" />
+                  Repay Loan
                 </Link>
               </Button>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Building className="mr-2 h-5 w-5" />
-              Lending Partners
-            </CardTitle>
-            <CardDescription>
-              Choose a lending partner that best fits your financial needs
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col md:flex-row gap-4">
-              <Button className="flex-1" asChild>
-                <Link to="/lenders">
-                  <Building className="mr-2 h-4 w-4" />
-                  Select Preferred Lender
-                </Link>
-              </Button>
-              {user?.preferredLender && (
-                <Button variant="outline" className="flex-1" asChild>
-                  <Link to="/profile">
-                    View Selected Lender
-                  </Link>
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        <CreditScoreBoard />
       </div>
     </div>
   );

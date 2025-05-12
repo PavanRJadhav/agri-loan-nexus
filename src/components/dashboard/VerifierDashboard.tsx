@@ -4,8 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { CreditCard, BarChart, ArrowDown, Users } from "lucide-react";
 import StatCard from "./StatCard";
 import ApplicationItem from "./ApplicationItem";
+import CreditScoreBoard from "./CreditScoreBoard";
 import { useAuth, LoanApplication } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const VerifierDashboard: React.FC = () => {
   const { user, sendNotification } = useAuth();
@@ -20,6 +22,8 @@ const VerifierDashboard: React.FC = () => {
     applicantInitial: string;
     submittedAt: string;
   }[]>([]);
+  
+  const [selectedApplicant, setSelectedApplicant] = useState<any>(null);
   
   useEffect(() => {
     // Get all pending loan applications from localStorage
@@ -47,7 +51,8 @@ const VerifierDashboard: React.FC = () => {
                   userEmail: email,
                   userName: userData.name,
                   applicantInitial: userData.name.split(" ").map((n: string) => n[0]).join(""),
-                  submittedAt: loan.submittedAt
+                  submittedAt: loan.submittedAt,
+                  userData: userData // Store the full user data for credit scoring
                 });
               });
             }
@@ -63,7 +68,13 @@ const VerifierDashboard: React.FC = () => {
       );
     };
     
-    setPendingApplications(getAllPendingLoans());
+    const applications = getAllPendingLoans();
+    setPendingApplications(applications);
+    
+    // Set the first applicant as selected by default if available
+    if (applications.length > 0) {
+      setSelectedApplicant(applications[0]);
+    }
   }, []);
 
   const handleApprove = (application: any) => {
@@ -89,6 +100,7 @@ const VerifierDashboard: React.FC = () => {
         
         // Update local state
         setPendingApplications(prev => prev.filter(app => app.id !== application.id));
+        setSelectedApplicant(null);
         
         // Send notification
         sendNotification("loan_approved", {
@@ -127,6 +139,7 @@ const VerifierDashboard: React.FC = () => {
         
         // Update local state
         setPendingApplications(prev => prev.filter(app => app.id !== application.id));
+        setSelectedApplicant(null);
         
         // Send notification
         sendNotification("loan_rejected", {
@@ -140,6 +153,10 @@ const VerifierDashboard: React.FC = () => {
         });
       }
     }
+  };
+
+  const handleSelectApplicant = (application: any) => {
+    setSelectedApplicant(application);
   };
 
   // Calculate statistics
@@ -198,8 +215,8 @@ const VerifierDashboard: React.FC = () => {
         />
       </div>
       
-      <div className="grid gap-4 md:grid-cols-1">
-        <Card>
+      <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Applications Needing Verification</CardTitle>
             <CardDescription>
@@ -227,12 +244,37 @@ const VerifierDashboard: React.FC = () => {
                       applicantInitial={app.applicantInitial}
                       onApprove={() => handleApprove(app)}
                       onReject={() => handleReject(app)}
+                      onClick={() => handleSelectApplicant(app)}
+                      isSelected={selectedApplicant?.id === app.id}
                     />
                   );
                 })}
               </div>
             ) : (
               <p className="text-center py-6 text-muted-foreground">No pending applications to verify</p>
+            )}
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Applicant Credit Score</CardTitle>
+            <CardDescription>
+              {selectedApplicant 
+                ? `Credit assessment for ${selectedApplicant.userName}`
+                : "Select an applicant to view credit score"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {selectedApplicant ? (
+              <CreditScoreBoard 
+                userData={selectedApplicant.userData} 
+                isVerifier={true}
+              />
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>Select an application to view credit details</p>
+              </div>
             )}
           </CardContent>
         </Card>
