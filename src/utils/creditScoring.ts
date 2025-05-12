@@ -72,7 +72,7 @@ export const calculateCreditScore = (factors: CreditScoreFactors): CreditScoreRe
   const loanAmountFactor = Math.min(100, Math.max(-100, (500000 - factors.loanAmount) / 10000));
   score += loanAmountFactor;
 
-  // Other factors - Fixed TypeScript errors by removing direct comparisons
+  // Other factors with proper type handling
   if (mappedFactors.cropYields === 'high') {
     score += 100; 
   } else if (mappedFactors.cropYields === 'medium') {

@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   Sheet,
@@ -23,7 +24,9 @@ import {
   Building,
   PlusCircle,
   CreditCard,
-  CheckCircle
+  CheckCircle,
+  Wallet,
+  History
 } from "lucide-react";
 
 export function Sidebar() {
@@ -73,6 +76,16 @@ export function Sidebar() {
       icon: PlusCircle,
     },
     {
+      title: "Transactions",
+      href: "/transactions",
+      icon: History,
+    },
+    {
+      title: "Repay Loan",
+      href: "/repay-loan",
+      icon: Wallet,
+    },
+    {
       title: "Lending Partners",
       href: "/lenders",
       icon: Building,
@@ -92,7 +105,7 @@ export function Sidebar() {
     },
     {
       title: "Loan Verification",
-      href: "/loan-verification",
+      href: "/verify-loans",
       icon: CreditCard,
     },
     {
