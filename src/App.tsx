@@ -23,6 +23,8 @@ import UsersPage from "@/pages/UsersPage";
 import SettingsPage from "@/pages/SettingsPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 import CreditScorePage from "./pages/CreditScorePage";
+import CreditCardsPage from "./pages/CreditCardsPage";
+import SupportChatPage from "./pages/SupportChatPage";
 import UnauthorizedPage from "@/pages/UnauthorizedPage";
 import RepayLoanPage from "./pages/RepayLoanPage";
 
@@ -153,6 +155,26 @@ const App: React.FC = () => {
             <ProtectedRoute>
               <MainLayout>
                 <CreditScorePage />
+              </MainLayout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/credit-cards" 
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <CreditCardsPage />
+              </MainLayout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/support" 
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <SupportChatPage />
               </MainLayout>
             </ProtectedRoute>
           } 

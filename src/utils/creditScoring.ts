@@ -1,3 +1,4 @@
+
 // Add export to the CreditScoreFactors interface to make it accessible
 export interface CreditScoreFactors {
   loanAmount: number;
@@ -74,7 +75,7 @@ export const calculateCreditScore = (factors: CreditScoreFactors): CreditScoreRe
 
   // Other factors with proper type handling
   if (mappedFactors.cropYields === 'high') {
-    score += 100; 
+    score += 100;
   } else if (mappedFactors.cropYields === 'medium') {
     score += 50;
   } else if (mappedFactors.cropYields === 'low') {

@@ -26,7 +26,8 @@ import {
   CreditCard,
   CheckCircle,
   Wallet,
-  History
+  History,
+  MessageSquare
 } from "lucide-react";
 
 export function Sidebar() {
@@ -36,6 +37,7 @@ export function Sidebar() {
     logout();
   };
 
+  // Admin navigation items
   const adminNavItems = [
     {
       title: "Dashboard",
@@ -59,6 +61,7 @@ export function Sidebar() {
     },
   ];
 
+  // Farmer navigation items
   const farmerNavItems = [
     {
       title: "Dashboard",
@@ -76,9 +79,19 @@ export function Sidebar() {
       icon: PlusCircle,
     },
     {
+      title: "Credit Cards",
+      href: "/credit-cards",
+      icon: CreditCard,
+    },
+    {
       title: "Transactions",
       href: "/transactions",
       icon: History,
+    },
+    {
+      title: "Credit Score",
+      href: "/credit-score",
+      icon: CheckCircle,
     },
     {
       title: "Repay Loan",
@@ -91,12 +104,13 @@ export function Sidebar() {
       icon: Building,
     },
     {
-      title: "Credit Score",
-      href: "/credit-score",
-      icon: CheckCircle,
+      title: "Support Chat",
+      href: "/support",
+      icon: MessageSquare,
     },
   ];
 
+  // Verifier navigation items
   const verifierNavItems = [
     {
       title: "Dashboard",
