@@ -12,9 +12,9 @@ const RepayLoanPage: React.FC = () => {
     ?.filter((loan: any) => loan.status === "approved")
     ?.reduce((total: number, loan: any) => total + loan.amount, 0) || 0;
   
-  // Get total repaid amount from transactions
+  // Get total repaid amount from transactions - updated to filter for "payment" type
   const repaidAmount = user?.transactions
-    ?.filter((txn: any) => txn.type === "repayment")
+    ?.filter((txn: any) => txn.type === "payment" && txn.description.includes("Loan repayment"))
     ?.reduce((total: number, txn: any) => total + txn.amount, 0) || 0;
   
   return (

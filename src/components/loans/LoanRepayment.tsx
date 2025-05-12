@@ -50,7 +50,7 @@ const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) 
       addTransaction({
         id: `txn-${Date.now()}`,
         amount: numericAmount,
-        type: "repayment",
+        type: "payment",  // Changed from "repayment" to "payment"
         description: `Loan repayment for ${targetLoanId}`,
         date: new Date().toISOString()
       });

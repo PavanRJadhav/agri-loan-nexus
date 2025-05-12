@@ -14,6 +14,8 @@ interface ApplicationItemProps {
   applicantInitial?: string;
   onApprove?: () => void;
   onReject?: () => void;
+  onClick?: () => void;
+  isSelected?: boolean;
 }
 
 const ApplicationItem: React.FC<ApplicationItemProps> = ({
@@ -27,12 +29,17 @@ const ApplicationItem: React.FC<ApplicationItemProps> = ({
   type,
   applicantInitial,
   onApprove,
-  onReject
+  onReject,
+  onClick,
+  isSelected
 }) => {
   if (showActions && applicantInitial) {
     // Verifier view with actions
     return (
-      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+      <div 
+        className={`flex items-center justify-between p-3 ${isSelected ? 'bg-gray-100 border border-gray-300' : 'bg-gray-50'} rounded-md cursor-pointer`}
+        onClick={onClick}
+      >
         <div className="flex-1">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-agriloan-primary flex items-center justify-center text-white">
@@ -56,14 +63,20 @@ const ApplicationItem: React.FC<ApplicationItemProps> = ({
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={onReject}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onReject) onReject();
+            }}
           >
             Reject
           </Button>
           <Button 
             className="bg-agriloan-primary hover:bg-agriloan-secondary" 
             size="sm"
-            onClick={onApprove}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onApprove) onApprove();
+            }}
           >
             Verify
           </Button>
