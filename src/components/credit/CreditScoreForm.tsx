@@ -7,10 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/components/ui/use-toast";
-import { CreditScoreFactors } from "@/utils/creditScoring";
 
 interface CreditScoreFormProps {
-  onSubmit: (data: CreditScoreFactors) => void;
+  onSubmit: (data: any) => void;
   isLoading?: boolean;
 }
 
@@ -18,8 +17,8 @@ const CreditScoreForm: React.FC<CreditScoreFormProps> = ({ onSubmit, isLoading =
   const [formData, setFormData] = useState({
     loanAmount: 5000,
     incomeSource: "farming",
-    farmSize: "small" as "small" | "medium" | "large",
-    experience: "novice" as "novice" | "experienced" | "expert",
+    farmSize: "small",
+    experience: "novice",
     repaymentHistory: 75,
   });
   const { toast } = useToast();
@@ -42,8 +41,8 @@ const CreditScoreForm: React.FC<CreditScoreFormProps> = ({ onSubmit, isLoading =
     onSubmit({
       loanAmount: parseFloat(formData.loanAmount.toString()),
       incomeSource: formData.incomeSource,
-      farmSize: formData.farmSize,
-      experience: formData.experience,
+      farmSize: formData.farmSize as "small" | "medium" | "large",
+      experience: formData.experience as "novice" | "experienced" | "expert",
       repaymentHistory: formData.repaymentHistory,
     });
 
