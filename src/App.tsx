@@ -24,7 +24,6 @@ import SettingsPage from "@/pages/SettingsPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 import CreditScorePage from "./pages/CreditScorePage";
 import UnauthorizedPage from "@/pages/UnauthorizedPage";
-import RepayLoanPage from "./pages/RepayLoanPage";
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -153,16 +152,6 @@ const App: React.FC = () => {
             <ProtectedRoute>
               <MainLayout>
                 <CreditScorePage />
-              </MainLayout>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/repay-loan" 
-          element={
-            <ProtectedRoute>
-              <MainLayout>
-                <RepayLoanPage />
               </MainLayout>
             </ProtectedRoute>
           } 
