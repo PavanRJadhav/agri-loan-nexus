@@ -3,6 +3,7 @@ import React from "react";
 import LoanRepayment from "@/components/loans/LoanRepayment";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
+import CreditScoreBoard from "@/components/dashboard/CreditScoreBoard";
 
 const RepayLoanPage: React.FC = () => {
   const { user } = useAuth();
@@ -12,7 +13,7 @@ const RepayLoanPage: React.FC = () => {
     ?.filter((loan: any) => loan.status === "approved")
     ?.reduce((total: number, loan: any) => total + loan.amount, 0) || 0;
   
-  // Get total repaid amount from transactions - updated to filter for "payment" type
+  // Get total repaid amount from transactions
   const repaidAmount = user?.transactions
     ?.filter((txn: any) => txn.type === "payment" && txn.description.includes("Loan repayment"))
     ?.reduce((total: number, txn: any) => total + txn.amount, 0) || 0;
@@ -53,6 +54,10 @@ const RepayLoanPage: React.FC = () => {
         </Card>
         
         <LoanRepayment defaultAmount={Math.max(0, outstandingAmount - repaidAmount)} />
+      </div>
+      
+      <div className="mt-6">
+        <CreditScoreBoard />
       </div>
     </div>
   );

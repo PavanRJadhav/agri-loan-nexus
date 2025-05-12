@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CreditCard, BarChart, ArrowUp, CalendarDays, FileText, PlusCircle, Landmark, BanknoteIcon, Building } from "lucide-react";
+import { CreditCard, BarChart, ArrowUp, CalendarDays, FileText, PlusCircle, Landmark, BanknoteIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import StatCard from "./StatCard";
@@ -9,6 +9,7 @@ import ApplicationItem from "./ApplicationItem";
 import CreditCardDisplay from "./CreditCardDisplay";
 import CreditScoreBoard from "./CreditScoreBoard";
 import { useAuth } from "@/contexts/AuthContext";
+import { assessCreditworthiness } from "@/utils/creditScoring";
 
 interface FarmerDashboardProps {
   userName: string;
@@ -21,6 +22,19 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ userName }) => {
   // Calculate total loan amount from applications
   const totalLoanAmount = user?.loans?.reduce((total, loan) => total + loan.amount, 0) || 0;
   
+  // Get total approved loan amount
+  const approvedLoanAmount = user?.loans
+    ?.filter(loan => loan.status === "approved")
+    ?.reduce((total, loan) => total + loan.amount, 0) || 0;
+  
+  // Calculate repaid amount
+  const repaidAmount = user?.transactions
+    ?.filter(txn => txn.type === "payment" && txn.description.includes("Loan repayment"))
+    ?.reduce((total, txn) => total + txn.amount, 0) || 0;
+  
+  // Outstanding balance
+  const outstandingBalance = Math.max(0, approvedLoanAmount - repaidAmount);
+  
   // Count active applications
   const activeApplications = user?.loans?.length || 0;
   const approvedApplications = user?.loans?.filter(loan => loan.status === "approved").length || 0;
@@ -28,6 +42,10 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ userName }) => {
   
   // Get latest loans
   const recentLoans = user?.loans?.slice(0, 3) || [];
+  
+  // Get credit score
+  const creditAssessment = assessCreditworthiness(user || {});
+  const creditScore = Math.round(creditAssessment.creditScore * 100);
   
   return (
     <div className="space-y-6">
@@ -41,8 +59,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ userName }) => {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Loan Amount"
-          value={totalLoanAmount > 0 ? `₹${totalLoanAmount.toLocaleString()}` : "₹0"}
-          description={financialData?.loanAmount ? `₹${financialData.loanAmount.toLocaleString()} requested` : "No loan amount set"}
+          value={`₹${approvedLoanAmount.toLocaleString()}`}
+          description={`₹${outstandingBalance.toLocaleString()} outstanding`}
           icon={CreditCard}
         />
         
@@ -62,11 +80,12 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ userName }) => {
         />
         
         <StatCard
-          title="Preferred Lender"
-          value={user?.preferredLender?.name || "Not selected"}
-          description={user?.preferredLender?.interestRate ? `${user.preferredLender.interestRate}% interest rate` : "Choose a lending partner"}
-          icon={Landmark}
-          link={user?.preferredLender ? "/profile" : "/lenders"}
+          title="Credit Score"
+          value={`${creditScore}/100`}
+          description={creditAssessment.category}
+          icon={CreditCard}
+          descriptionColor={creditScore >= 60 ? "text-green-600" : "text-yellow-600"}
+          link="/profile"
         />
       </div>
       

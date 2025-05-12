@@ -1,12 +1,17 @@
-import React from "react";
+
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, XCircle, Eye } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { assessCreditworthiness } from "@/utils/creditScoring";
 
 const LoanVerificationPage: React.FC = () => {
   const { user, addTransaction, sendNotification } = useAuth();
+  const [viewDetails, setViewDetails] = useState(false);
+  const [selectedLoan, setSelectedLoan] = useState<any>(null);
   
   // Process all loans from all users
   const getAllPendingLoans = () => {
@@ -17,6 +22,7 @@ const LoanVerificationPage: React.FC = () => {
       userName: string;
       userEmail: string;
       loan: any;
+      creditScore: number;
     }> = [];
     
     // Try to get all users from localStorage (in a real app, this would be a database query)
@@ -27,13 +33,17 @@ const LoanVerificationPage: React.FC = () => {
         const userData = JSON.parse(localStorage.getItem(key) || '{}');
         
         if (userData.loans && Array.isArray(userData.loans)) {
+          // Calculate credit score
+          const creditAssessment = assessCreditworthiness(userData);
+          
           userData.loans.forEach((loan: any) => {
             if (loan.status === 'pending') {
               allLoans.push({
                 userId: userData.id || 'unknown',
                 userName: userData.name || email.split('@')[0],
                 userEmail: email,
-                loan
+                loan,
+                creditScore: creditAssessment.creditScore * 100
               });
             }
           });
@@ -45,6 +55,11 @@ const LoanVerificationPage: React.FC = () => {
   };
   
   const pendingLoans = getAllPendingLoans();
+  
+  const handleViewDetails = (loan: any) => {
+    setSelectedLoan(loan);
+    setViewDetails(true);
+  };
   
   const handleApproveLoan = (userEmail: string, loanId: string, amount: number) => {
     // Get the user data
@@ -92,6 +107,9 @@ const LoanVerificationPage: React.FC = () => {
       amount: loan.amount,
       email: userEmail
     });
+    
+    // Close dialog if open
+    setViewDetails(false);
   };
   
   const handleRejectLoan = (userEmail: string, loanId: string) => {
@@ -135,6 +153,17 @@ const LoanVerificationPage: React.FC = () => {
       type: loan.type,
       email: userEmail
     });
+    
+    // Close dialog if open
+    setViewDetails(false);
+  };
+  
+  // Credit score color function
+  const getCreditScoreColor = (score: number) => {
+    if (score >= 90) return "text-green-600";
+    if (score >= 80) return "text-green-500";
+    if (score >= 60) return "text-yellow-500";
+    return "text-red-500";
   };
 
   return (
@@ -169,22 +198,33 @@ const LoanVerificationPage: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="mb-4">
-                    <p className="text-sm font-medium mb-1">Purpose:</p>
-                    <p className="text-sm p-2 bg-gray-100 rounded">{item.loan.purpose}</p>
-                  </div>
-                  
-                  <div className="text-sm text-muted-foreground mb-4">
-                    Submitted: {new Date(item.loan.submittedAt).toLocaleDateString('en-IN', { 
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
+                  <div className="flex justify-between items-center mb-4">
+                    <p className="text-sm text-muted-foreground">
+                      Submitted: {new Date(item.loan.submittedAt).toLocaleDateString('en-IN', { 
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                    
+                    <div className="flex items-center">
+                      <span className="text-sm mr-2">Credit Score:</span>
+                      <span className={`font-bold ${getCreditScoreColor(item.creditScore)}`}>
+                        {item.creditScore.toFixed(0)}/100
+                      </span>
+                    </div>
                   </div>
                   
                   <div className="flex justify-end space-x-3">
+                    <Button 
+                      variant="outline"
+                      onClick={() => handleViewDetails(item)}
+                    >
+                      <Eye className="mr-2 h-4 w-4" />
+                      View Details
+                    </Button>
                     <Button 
                       variant="outline" 
                       className="border-red-500 text-red-500 hover:bg-red-50" 
@@ -194,8 +234,9 @@ const LoanVerificationPage: React.FC = () => {
                       Reject
                     </Button>
                     <Button 
-                      className="bg-green-600 hover:bg-green-700"
+                      className={`${item.creditScore >= 60 ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400'}`}
                       onClick={() => handleApproveLoan(item.userEmail, item.loan.id, item.loan.amount)}
+                      disabled={item.creditScore < 60}
                     >
                       <CheckCircle className="mr-2 h-4 w-4" />
                       Approve
@@ -212,6 +253,63 @@ const LoanVerificationPage: React.FC = () => {
           )}
         </CardContent>
       </Card>
+      
+      <Dialog open={viewDetails} onOpenChange={setViewDetails}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Loan Application Details</DialogTitle>
+            <DialogDescription>
+              {selectedLoan ? `From ${selectedLoan.userName}` : ''}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedLoan && (
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-sm font-medium">Loan Type</h4>
+                <p>{selectedLoan.loan.type}</p>
+              </div>
+              
+              <div>
+                <h4 className="text-sm font-medium">Amount Requested</h4>
+                <p>₹{selectedLoan.loan.amount.toLocaleString()}</p>
+              </div>
+              
+              <div>
+                <h4 className="text-sm font-medium">Loan Purpose</h4>
+                <p className="bg-gray-50 p-3 rounded-md">{selectedLoan.loan.purpose}</p>
+              </div>
+              
+              <div>
+                <h4 className="text-sm font-medium">Credit Eligibility</h4>
+                <p className={selectedLoan.creditScore >= 60 ? "text-green-600" : "text-red-500"}>
+                  {selectedLoan.creditScore >= 60 
+                    ? "Eligible for approval" 
+                    : "Not eligible (credit score below 60)"}
+                </p>
+              </div>
+              
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setViewDetails(false)}>Close</Button>
+                <Button 
+                  variant="outline" 
+                  className="border-red-500 text-red-500 hover:bg-red-50" 
+                  onClick={() => handleRejectLoan(selectedLoan.userEmail, selectedLoan.loan.id)}
+                >
+                  Reject
+                </Button>
+                <Button 
+                  className={`${selectedLoan.creditScore >= 60 ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400'}`} 
+                  onClick={() => handleApproveLoan(selectedLoan.userEmail, selectedLoan.loan.id, selectedLoan.loan.amount)}
+                  disabled={selectedLoan.creditScore < 60}
+                >
+                  Approve
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
