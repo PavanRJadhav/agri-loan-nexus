@@ -1,7 +1,7 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CreditCard, BarChart, ArrowUp, CalendarDays, FileText, PlusCircle, Landmark, BanknoteIcon } from "lucide-react";
+import { CreditCard, BarChart, ArrowUp, CalendarDays, FileText, PlusCircle, Landmark, BanknoteIcon, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import StatCard from "./StatCard";
@@ -10,14 +10,27 @@ import CreditCardDisplay from "./CreditCardDisplay";
 import CreditScoreBoard from "./CreditScoreBoard";
 import { useAuth } from "@/contexts/AuthContext";
 import { assessCreditworthiness } from "@/utils/creditScoring";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface FarmerDashboardProps {
   userName: string;
 }
 
 const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ userName }) => {
-  const { user, getUserFinancialData } = useAuth();
+  const { user, getUserFinancialData, updateUserData } = useAuth();
   const financialData = getUserFinancialData();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [loanToDelete, setLoanToDelete] = useState<string | null>(null);
   
   // Calculate total loan amount from applications
   const totalLoanAmount = user?.loans?.reduce((total, loan) => total + loan.amount, 0) || 0;
@@ -46,6 +59,22 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ userName }) => {
   // Get credit score
   const creditAssessment = assessCreditworthiness(user || {});
   const creditScore = Math.round(creditAssessment.creditScore * 100);
+
+  // Handle delete application
+  const handleDeleteApplication = (loanId: string) => {
+    setLoanToDelete(loanId);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteApplication = () => {
+    if (loanToDelete && user) {
+      const updatedLoans = user.loans?.filter(loan => loan.id !== loanToDelete) || [];
+      updateUserData({ loans: updatedLoans });
+      toast.success("Loan application deleted successfully");
+    }
+    setDeleteDialogOpen(false);
+    setLoanToDelete(null);
+  };
   
   return (
     <div className="space-y-6">
@@ -99,7 +128,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ userName }) => {
               </CardDescription>
             </div>
             <Button variant="outline" asChild className="ml-auto">
-              <Link to="/loan-applications/new">
+              <Link to="/lenders">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 New Application
               </Link>
@@ -109,26 +138,37 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ userName }) => {
             <div className="space-y-4">
               {recentLoans.length > 0 ? (
                 recentLoans.map((loan, index) => (
-                  <ApplicationItem
-                    key={loan.id}
-                    id={index + 1}
-                    title={loan.type}
-                    date={`Applied on ${new Date(loan.submittedAt).toLocaleDateString()}`}
-                    status={loan.status}
-                    statusColor={
-                      loan.status === "approved" 
-                        ? "bg-green-100 text-green-800" 
-                        : loan.status === "rejected" 
-                          ? "bg-red-100 text-red-800" 
-                          : "bg-yellow-100 text-yellow-800"
-                    }
-                  />
+                  <div key={loan.id} className="flex items-center">
+                    <ApplicationItem
+                      id={index + 1}
+                      title={loan.type}
+                      date={`Applied on ${new Date(loan.submittedAt).toLocaleDateString()}`}
+                      status={loan.status}
+                      statusColor={
+                        loan.status === "approved" 
+                          ? "bg-green-100 text-green-800" 
+                          : loan.status === "rejected" 
+                            ? "bg-red-100 text-red-800" 
+                            : "bg-yellow-100 text-yellow-800"
+                      }
+                    />
+                    {loan.status === "pending" && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="ml-2 text-red-500 hover:text-red-700"
+                        onClick={() => handleDeleteApplication(loan.id)}
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 ))
               ) : (
                 <div className="text-center py-6 text-muted-foreground">
                   <p>No loan applications yet</p>
                   <Button variant="link" asChild>
-                    <Link to="/loan-applications/new">
+                    <Link to="/lenders">
                       Apply for your first loan
                     </Link>
                   </Button>
@@ -172,7 +212,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ userName }) => {
           <CardContent>
             <div className="flex flex-col md:flex-row gap-4">
               <Button className="flex-1" asChild>
-                <Link to="/loan-applications/new">
+                <Link to="/lenders">
                   <PlusCircle className="mr-2 h-4 w-4" />
                   New Loan Application
                 </Link>
@@ -189,6 +229,23 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ userName }) => {
         
         <CreditScoreBoard />
       </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Loan Application</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this loan application? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteApplication} className="bg-red-500 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

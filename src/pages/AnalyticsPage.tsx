@@ -1,36 +1,99 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Cell } from "recharts";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, User, LoanApplication } from "@/contexts/AuthContext";
 
 const AnalyticsPage: React.FC = () => {
-  // Sample data for charts
-  const loanTypeData = [
-    { name: "Crop Loans", value: 45 },
-    { name: "Equipment", value: 30 },
-    { name: "Irrigation", value: 15 },
-    { name: "Seeds", value: 10 }
-  ];
-
+  const [loanTypeData, setLoanTypeData] = useState<{ name: string; value: number }[]>([]);
+  const [monthlyApplicationsData, setMonthlyApplicationsData] = useState<{ name: string; applications: number }[]>([]);
+  const [approvalRateData, setApprovalRateData] = useState<{ name: string; rate: number }[]>([]);
+  
   // Colors for pie chart
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
-
-  const monthlyApplicationsData = [
-    { name: "Jan", applications: 12 },
-    { name: "Feb", applications: 19 },
-    { name: "Mar", applications: 15 },
-    { name: "Apr", applications: 25 },
-    { name: "May", applications: 30 }
-  ];
-
-  const approvalRateData = [
-    { name: "Jan", rate: 65 },
-    { name: "Feb", rate: 68 },
-    { name: "Mar", rate: 72 },
-    { name: "Apr", rate: 75 },
-    { name: "May", rate: 72 }
-  ];
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+  
+  useEffect(() => {
+    const collectAnalyticsData = () => {
+      // Get all users and their loans from localStorage
+      const users: User[] = [];
+      const allLoans: LoanApplication[] = [];
+      
+      // Loop through localStorage to find all users
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith("agriloan_userdata_")) {
+          try {
+            const userData = JSON.parse(localStorage.getItem(key) || "{}");
+            
+            if (userData.name && userData.loans && Array.isArray(userData.loans)) {
+              allLoans.push(...userData.loans);
+            }
+          } catch (error) {
+            console.error("Error parsing user data:", error);
+          }
+        }
+      }
+      
+      // Process loan types data
+      const loanTypeCounts: Record<string, number> = {};
+      allLoans.forEach(loan => {
+        const type = loan.type;
+        loanTypeCounts[type] = (loanTypeCounts[type] || 0) + 1;
+      });
+      
+      const loanTypeDataTemp = Object.entries(loanTypeCounts).map(([name, value]) => ({
+        name,
+        value
+      }));
+      setLoanTypeData(loanTypeDataTemp);
+      
+      // Process monthly applications data
+      const monthlyData: Record<string, number> = {};
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      
+      allLoans.forEach(loan => {
+        const date = new Date(loan.submittedAt);
+        const monthName = monthNames[date.getMonth()];
+        monthlyData[monthName] = (monthlyData[monthName] || 0) + 1;
+      });
+      
+      const monthlyApplicationsDataTemp = Object.entries(monthlyData).map(([name, applications]) => ({
+        name,
+        applications
+      }));
+      setMonthlyApplicationsData(monthlyApplicationsDataTemp.length > 0 ? monthlyApplicationsDataTemp : [
+        { name: monthNames[new Date().getMonth()], applications: 0 }
+      ]);
+      
+      // Process approval rate data
+      const monthlyApprovalData: Record<string, { total: number; approved: number }> = {};
+      
+      allLoans.forEach(loan => {
+        const date = new Date(loan.submittedAt);
+        const monthName = monthNames[date.getMonth()];
+        
+        if (!monthlyApprovalData[monthName]) {
+          monthlyApprovalData[monthName] = { total: 0, approved: 0 };
+        }
+        
+        monthlyApprovalData[monthName].total += 1;
+        if (loan.status === "approved") {
+          monthlyApprovalData[monthName].approved += 1;
+        }
+      });
+      
+      const approvalRateDataTemp = Object.entries(monthlyApprovalData).map(([name, data]) => ({
+        name,
+        rate: data.total > 0 ? Math.round((data.approved / data.total) * 100) : 0
+      }));
+      
+      setApprovalRateData(approvalRateDataTemp.length > 0 ? approvalRateDataTemp : [
+        { name: monthNames[new Date().getMonth()], rate: 0 }
+      ]);
+    };
+    
+    collectAnalyticsData();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -51,7 +114,7 @@ const AnalyticsPage: React.FC = () => {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={loanTypeData}
+                  data={loanTypeData.length > 0 ? loanTypeData : [{ name: "No Data", value: 1 }]}
                   cx="50%"
                   cy="50%"
                   labelLine={false}

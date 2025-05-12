@@ -45,6 +45,10 @@ function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/unauthorized" element={<UnauthorizedPage />} />
+              <Route path="/features" element={<LandingPage />} />
+              <Route path="/about-us" element={<LandingPage />} />
+              <Route path="/contact" element={<LandingPage />} />
+              <Route path="/learn-more" element={<LandingPage />} />
               
               {/* Protected routes for all roles */}
               <Route path="/dashboard" element={<MainLayout />}>

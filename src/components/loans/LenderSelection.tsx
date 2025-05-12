@@ -7,11 +7,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Building } from "lucide-react";
 import { LendingPartnerType } from "@/pages/LendingPartnersPage";
 import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 const LenderSelection: React.FC = () => {
   const { user, updateUserData, sendNotification } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { toast: hookToast } = useToast();
 
   const handleLenderSelection = (lender: LendingPartnerType) => {
     updateUserData({ 
@@ -27,12 +28,11 @@ const LenderSelection: React.FC = () => {
       name: lender.name
     });
     
-    toast({
-      title: "Lender Selected",
+    toast.success("Lender Selected", {
       description: `You've selected ${lender.name} as your preferred lender.`,
     });
     
-    navigate("/dashboard");
+    navigate("/loan-applications/new");
   };
 
   const lenders: LendingPartnerType[] = [
@@ -71,6 +71,7 @@ const LenderSelection: React.FC = () => {
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-2xl font-bold mb-4">Select Your Preferred Lender</h1>
+      <p className="mb-6 text-muted-foreground">Please select a lending partner before proceeding with your loan application.</p>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {lenders.map((lender) => (
           <Card key={lender.id}>
@@ -79,12 +80,36 @@ const LenderSelection: React.FC = () => {
               <CardDescription>{lender.description}</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>Interest Rate: {lender.interestRate}%</p>
-              <p>Loan Amount: ₹{lender.minAmount} - ₹{lender.maxAmount}</p>
-              <Button onClick={() => handleLenderSelection(lender)} className="mt-4">
-                <Building className="mr-2 h-4 w-4" />
-                Select Lender
-              </Button>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-sm font-medium">Interest Rate</h4>
+                  <p className="text-sm">{lender.interestRate}%</p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium">Loan Amount Range</h4>
+                  <p className="text-sm">₹{lender.minAmount.toLocaleString()} - ₹{lender.maxAmount.toLocaleString()}</p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium">Processing Time</h4>
+                  <p className="text-sm">{lender.processingTime}</p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium">Requirements</h4>
+                  <ul className="text-sm list-disc pl-5">
+                    {lender.requirements.map((req, i) => (
+                      <li key={i}>{req}</li>
+                    ))}
+                  </ul>
+                </div>
+                
+                <Button 
+                  className="w-full" 
+                  onClick={() => handleLenderSelection(lender)}
+                >
+                  <Building className="mr-2 h-4 w-4" />
+                  Select & Continue
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ))}

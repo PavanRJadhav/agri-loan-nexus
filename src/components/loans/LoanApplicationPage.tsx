@@ -1,17 +1,28 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import LoanApplicationForm from "./LoanApplicationForm";
 import { useAuth } from "@/contexts/AuthContext";
 
 const LoanApplicationPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
+  const { toast: hookToast } = useToast();
   const navigate = useNavigate();
-  const { addLoanApplication, updateUserData, user } = useAuth();
+  const { addLoanApplication, updateUserData, user, addTransaction } = useAuth();
+  
+  // Check if lender is selected
+  useEffect(() => {
+    if (!user?.preferredLender) {
+      toast.info("Please select a lender first", {
+        description: "You need to select a lender before applying for a loan."
+      });
+      navigate("/lenders");
+    }
+  }, [user?.preferredLender, navigate]);
   
   const handleSubmit = async (data: any) => {
     setIsSubmitting(true);
@@ -19,6 +30,20 @@ const LoanApplicationPage: React.FC = () => {
     try {
       // Log submission
       console.info("Submitting loan application:", data);
+      
+      // Get the selected loan type name
+      const loanTypeName = data.loanType;
+      
+      // Add loan application
+      const application = {
+        type: loanTypeName,
+        amount: parseFloat(data.amount),
+        purpose: data.purpose,
+        lender: user?.preferredLender?.name || "Unknown Lender"
+      };
+      
+      // Add application to user's loans
+      addLoanApplication(application);
       
       // Add application fee deduction (Rs. 500)
       const currentBalance = user?.financialData?.currentBalance || 0;
@@ -29,16 +54,8 @@ const LoanApplicationPage: React.FC = () => {
         }
       });
       
-      // Add loan application
-      addLoanApplication({
-        type: data.loanType,
-        amount: parseFloat(data.amount),
-        purpose: data.purpose,
-      });
-      
       // Add transaction for application fee
       if (user) {
-        const { addTransaction } = useAuth();
         addTransaction({
           amount: 500,
           type: "payment",
@@ -46,8 +63,8 @@ const LoanApplicationPage: React.FC = () => {
         });
       }
       
-      toast({
-        title: "Application Submitted",
+      // Show success message
+      toast.success("Application Submitted", {
         description: "Your loan application has been submitted successfully.",
       });
       
@@ -57,22 +74,24 @@ const LoanApplicationPage: React.FC = () => {
       }, 2000);
     } catch (error) {
       console.error("Error submitting application:", error);
-      toast({
-        title: "Submission Failed",
+      toast.error("Submission Failed", {
         description: "There was a problem submitting your application. Please try again.",
-        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
   };
   
+  if (!user?.preferredLender) {
+    return null; // Don't render anything while redirecting
+  }
+  
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Loan Application</h2>
         <p className="text-muted-foreground">
-          Fill out the form below to apply for an agricultural loan
+          Fill out the form below to apply for an agricultural loan with {user?.preferredLender?.name}
         </p>
       </div>
       
