@@ -101,8 +101,14 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const LoanApplicationForm: React.FC = () => {
-  const { user, addLoanApplication, addTransaction } = useAuth();
+// Adding proper props interface to match what LoanApplicationPage is passing
+interface LoanApplicationFormProps {
+  onSubmit: (data: any) => Promise<void>;
+  isSubmitting: boolean;
+}
+
+const LoanApplicationForm: React.FC<LoanApplicationFormProps> = ({ onSubmit, isSubmitting }) => {
+  const { user } = useAuth();
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -119,49 +125,21 @@ const LoanApplicationForm: React.FC = () => {
   
   const selectedLoan = loanTypes.find(loan => loan.id === selectedLoanType);
   
-  const onSubmit = async (data: FormValues) => {
+  const handleSubmit = async (data: FormValues) => {
     try {
-      console.log("Submitting loan application:", data);
-      // In a real app, we would send this data to an API
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Add loan to user's loans
-      const loanTypeName = selectedLoan?.name || data.loanType;
-      
-      addLoanApplication({
-        type: loanTypeName,
-        amount: data.amount,
-        purpose: data.purpose
-      });
-      
-      // Record a transaction for application fee
-      addTransaction({
-        amount: 500, // Application fee
-        type: "payment",
-        description: `Application fee for ${loanTypeName}`
-      });
-      
-      toast.success("Loan application submitted successfully!", {
-        description: `Your ${selectedLoan?.name} application has been received.`,
-      });
-      
-      form.reset({
-        amount: 50000,
-        tenure: 12,
-        hasCollateral: false,
-        termsAccepted: false,
-      });
+      // Call the onSubmit function passed from parent component
+      await onSubmit(data);
     } catch (error) {
+      console.error("Error submitting loan application:", error);
       toast.error("Failed to submit application", {
         description: "Please try again later.",
       });
-      console.error("Error submitting loan application:", error);
     }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <div className="grid gap-6 md:grid-cols-2">
           <div>
             <h2 className="text-2xl font-semibold mb-4">Loan Details</h2>
@@ -337,8 +315,8 @@ const LoanApplicationForm: React.FC = () => {
         </div>
         
         <div className="flex justify-end">
-          <Button type="submit" size="lg">
-            Submit Application
+          <Button type="submit" size="lg" disabled={isSubmitting}>
+            {isSubmitting ? "Submitting..." : "Submit Application"}
           </Button>
         </div>
       </form>
