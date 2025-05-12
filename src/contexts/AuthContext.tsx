@@ -1,5 +1,4 @@
-
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { sendEmailNotification, getNotificationTemplates } from "@/services/NotificationService";
 
 export type UserRole = "farmer" | "admin" | "verifier";
@@ -38,30 +37,17 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: "farmer" | "admin" | "verifier";
+  role: UserRole;
+  financialData?: UserFinancialData;
   loans?: LoanApplication[];
   transactions?: Transaction[];
-  preferredLender?: {
-    id: string;
-    name: string;
-    interestRate: number;
-  };
-  aadhaarVerified?: boolean;
-  aadhaarNumber?: string;
-  currentBalance?: number;
-  creditScore?: {
-    score: number;
-    maxEligibleAmount: number;
-    riskLevel: 'Low' | 'Medium' | 'High';
-    contributingFactors: string[];
-    loanApprovalLikelihood: 'High' | 'Medium' | 'Low';
-  };
-  financialData?: UserFinancialData;
+  preferredLender?: PreferredLender;
 }
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, role: UserRole) => Promise<void>;
   logout: () => void;
@@ -143,14 +129,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const updateUserData = useCallback((data: Partial<User>) => {
+  const updateUserData = (data: Partial<User>) => {
     if (!user) return;
     
     const updatedUser = { ...user, ...data };
     setUser(updatedUser);
     
-    // Update localStorage
-    localStorage.setItem(`agriloan_userdata_${updatedUser.email}`, JSON.stringify(updatedUser));
+    // Update in localStorage
+    localStorage.setItem("agriloan_user", JSON.stringify(updatedUser));
     
     // Update additional data in separate storage
     if (user.email) {
@@ -174,7 +160,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Send profile updated notification
       sendNotification("profile_updated", {});
     }
-  }, [user]);
+  };
 
   const getUserFinancialData = () => {
     if (!user || !user.email) return undefined;
@@ -357,6 +343,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider value={{ 
       user, 
       isAuthenticated: !!user, 
+      isLoading,
       login,
       register,
       logout,

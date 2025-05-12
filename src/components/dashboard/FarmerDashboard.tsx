@@ -1,14 +1,13 @@
 
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CreditCard, BarChart, ArrowUp, CalendarDays, FileText, PlusCircle, Landmark, BanknoteIcon, Building, CheckCircle } from "lucide-react";
+import { CreditCard, BarChart, ArrowUp, CalendarDays, FileText, PlusCircle, Landmark, BanknoteIcon, Building } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import StatCard from "./StatCard";
 import ApplicationItem from "./ApplicationItem";
 import CreditCardDisplay from "./CreditCardDisplay";
 import { useAuth } from "@/contexts/AuthContext";
-import { Progress } from "@/components/ui/progress";
 
 interface FarmerDashboardProps {
   userName: string;
@@ -29,9 +28,6 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ userName }) => {
   // Get latest loans
   const recentLoans = user?.loans?.slice(0, 3) || [];
   
-  // Get credit score information
-  const creditScore = user?.creditScore;
-
   return (
     <div className="space-y-6">
       <div>
@@ -65,11 +61,11 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ userName }) => {
         />
         
         <StatCard
-          title="Credit Score"
-          value={creditScore ? creditScore.score.toString() : "Not Available"}
-          description={creditScore ? `Up to ₹${creditScore.maxEligibleAmount.toLocaleString()} eligible` : "Check your score"}
-          icon={CheckCircle}
-          link="/credit-score"
+          title="Preferred Lender"
+          value={user?.preferredLender?.name || "Not selected"}
+          description={user?.preferredLender?.interestRate ? `${user.preferredLender.interestRate}% interest rate` : "Choose a lending partner"}
+          icon={Landmark}
+          link={user?.preferredLender ? "/profile" : "/lenders"}
         />
       </div>
       
@@ -123,97 +119,22 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ userName }) => {
         </Card>
         
         <Card className="col-span-3">
-          {creditScore ? (
-            <>
-              <CardHeader>
-                <CardTitle>Credit Score</CardTitle>
-                <CardDescription>
-                  Your agricultural credit profile
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col items-center mb-4">
-                  <div className="text-4xl font-bold mb-1">
-                    <span className={
-                      creditScore.score >= 700 ? "text-green-600" : 
-                      creditScore.score >= 550 ? "text-yellow-600" : 
-                      "text-red-600"
-                    }>
-                      {creditScore.score}
-                    </span>
-                  </div>
-                  <Progress 
-                    value={(creditScore.score - 300) / 5.5} 
-                    className={`w-full h-2 ${
-                      creditScore.score >= 700 ? "bg-green-500" : 
-                      creditScore.score >= 550 ? "bg-yellow-500" : 
-                      "bg-red-500"
-                    }`}
-                  />
-                  <div className="w-full flex justify-between text-xs mt-1 text-muted-foreground">
-                    <span>Poor</span>
-                    <span>Fair</span>
-                    <span>Good</span>
-                  </div>
-                </div>
-                
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Max Eligible Loan:</span>
-                    <span className="text-sm font-medium">₹{creditScore.maxEligibleAmount.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Risk Level:</span>
-                    <span className={`text-sm font-medium ${
-                      creditScore.riskLevel === 'Low' ? 'text-green-600' : 
-                      creditScore.riskLevel === 'Medium' ? 'text-yellow-600' : 
-                      'text-red-600'
-                    }`}>
-                      {creditScore.riskLevel}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Approval Likelihood:</span>
-                    <span className={`text-sm font-medium ${
-                      creditScore.loanApprovalLikelihood === 'High' ? 'text-green-600' : 
-                      creditScore.loanApprovalLikelihood === 'Medium' ? 'text-yellow-600' : 
-                      'text-red-600'
-                    }`}>
-                      {creditScore.loanApprovalLikelihood}
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="mt-4">
-                  <Button variant="outline" asChild className="w-full">
-                    <Link to="/credit-score">
-                      View Full Credit Report
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </>
-          ) : (
-            <>
-              <CardHeader>
-                <CardTitle>Check Your Credit Score</CardTitle>
-                <CardDescription>
-                  Get a personalized credit assessment
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-4">
-                  <CheckCircle className="h-12 w-12 text-blue-500 mx-auto mb-4" />
-                  <p className="mb-4">Your credit score helps determine your loan eligibility, interest rates, and borrowing limits.</p>
-                  <Button asChild>
-                    <Link to="/credit-score">
-                      Check My Credit Score
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </>
-          )}
+          <CardHeader>
+            <CardTitle>Credit Card Status</CardTitle>
+            <CardDescription>
+              Your Kisan Credit Card details
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <CreditCardDisplay
+              name={userName}
+              cardNumber="**** **** **** 4589"
+              validUntil="12/25"
+              availableCredit={financialData?.currentBalance ? `₹${financialData.currentBalance.toLocaleString()}` : "₹0"}
+              creditLimit="₹50,000"
+              percentAvailable={financialData?.currentBalance ? Math.min(100, Math.round((financialData.currentBalance / 50000) * 100)) : 0}
+            />
+          </CardContent>
         </Card>
       </div>
 

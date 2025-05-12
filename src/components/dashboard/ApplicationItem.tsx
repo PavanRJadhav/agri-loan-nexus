@@ -12,7 +12,6 @@ interface ApplicationItemProps {
   amount?: string;
   type?: string;
   applicantInitial?: string;
-  creditScore?: number;
   onApprove?: () => void;
   onReject?: () => void;
 }
@@ -27,7 +26,6 @@ const ApplicationItem: React.FC<ApplicationItemProps> = ({
   amount,
   type,
   applicantInitial,
-  creditScore,
   onApprove,
   onReject
 }) => {
@@ -54,17 +52,6 @@ const ApplicationItem: React.FC<ApplicationItemProps> = ({
           <p className="text-sm font-medium">Amount</p>
           <p className="text-sm text-muted-foreground">{amount}</p>
         </div>
-        {creditScore !== undefined && (
-          <div className="flex-1">
-            <p className="text-sm font-medium">Credit Score</p>
-            <p className={`text-sm font-medium ${
-              creditScore >= 700 ? 'text-green-600' : 
-              creditScore >= 550 ? 'text-yellow-600' : 'text-red-600'
-            }`}>
-              {creditScore}
-            </p>
-          </div>
-        )}
         <div className="flex gap-2">
           <Button 
             variant="outline" 
