@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreditCard, BarChart, ArrowDown, Users } from "lucide-react";
@@ -50,7 +49,7 @@ const VerifierDashboard: React.FC = () => {
               pending.forEach((loan: any) => {
                 // Calculate credit score using the assessCreditworthiness function
                 const creditAssessment = assessCreditworthiness(userData);
-                const creditScore = creditAssessment.creditScore * 100;
+                const creditScore = Math.round(creditAssessment.creditScore * 100);
                 
                 pendingLoans.push({
                   id: `${email}-${loan.id}`,
@@ -61,7 +60,7 @@ const VerifierDashboard: React.FC = () => {
                   userName: userData.name,
                   applicantInitial: userData.name.charAt(0).toUpperCase(),
                   submittedAt: loan.submittedAt,
-                  purpose: loan.purpose,
+                  purpose: loan.purpose || "No purpose specified",
                   userData: userData,
                   creditScore: creditScore
                 });
@@ -74,6 +73,9 @@ const VerifierDashboard: React.FC = () => {
       }
       
       console.log("Verifier dashboard - Pending loans found:", pendingLoans.length);
+      if (pendingLoans.length > 0) {
+        console.log("Pending loans data:", pendingLoans);
+      }
       
       // Sort by submission date (newest first)
       return pendingLoans.sort((a, b) => 

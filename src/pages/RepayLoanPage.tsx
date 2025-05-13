@@ -9,14 +9,28 @@ const RepayLoanPage: React.FC = () => {
   const { user } = useAuth();
   
   // Calculate total outstanding loan amount
-  const outstandingAmount = user?.loans
-    ?.filter((loan: any) => loan.status === "approved")
-    ?.reduce((total: number, loan: any) => total + loan.amount, 0) || 0;
+  const approvedLoans = user?.loans
+    ?.filter((loan: any) => loan.status === "approved") || [];
   
-  // Get total repaid amount from transactions
-  const repaidAmount = user?.transactions
-    ?.filter((txn: any) => txn.type === "payment" && txn.description.includes("Loan repayment"))
-    ?.reduce((total: number, txn: any) => total + txn.amount, 0) || 0;
+  // Calculate outstanding balance for each approved loan
+  const loansWithBalance = approvedLoans.map((loan: any) => {
+    const repaidForThisLoan = user?.transactions
+      ?.filter((txn: any) => 
+        txn.type === "payment" && 
+        txn.description.includes(`Loan repayment for ${loan.id}`)
+      )
+      ?.reduce((total: number, txn: any) => total + txn.amount, 0) || 0;
+    
+    return {
+      ...loan,
+      remainingBalance: Math.max(0, loan.amount - repaidForThisLoan)
+    };
+  });
+  
+  // Calculate total approved amount, repaid amount, and outstanding amount
+  const totalApprovedAmount = loansWithBalance.reduce((total, loan) => total + loan.amount, 0);
+  const outstandingAmount = loansWithBalance.reduce((total, loan) => total + loan.remainingBalance, 0);
+  const repaidAmount = totalApprovedAmount - outstandingAmount;
   
   return (
     <div className="space-y-6">
@@ -37,7 +51,7 @@ const RepayLoanPage: React.FC = () => {
             <dl className="space-y-4">
               <div className="flex justify-between">
                 <dt className="text-sm font-medium text-muted-foreground">Total Approved Loans</dt>
-                <dd className="text-sm font-semibold">₹{outstandingAmount.toLocaleString()}</dd>
+                <dd className="text-sm font-semibold">₹{totalApprovedAmount.toLocaleString()}</dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-sm font-medium text-muted-foreground">Total Repaid</dt>
@@ -45,15 +59,27 @@ const RepayLoanPage: React.FC = () => {
               </div>
               <div className="flex justify-between pt-4 border-t">
                 <dt className="text-base font-medium">Outstanding Balance</dt>
-                <dd className="text-base font-bold">
-                  ₹{Math.max(0, outstandingAmount - repaidAmount).toLocaleString()}
-                </dd>
+                <dd className="text-base font-bold">₹{outstandingAmount.toLocaleString()}</dd>
               </div>
+              
+              {loansWithBalance.length > 0 && (
+                <div className="mt-4 pt-4 border-t">
+                  <h4 className="text-sm font-medium mb-2">Individual Loan Balances:</h4>
+                  <ul className="space-y-2">
+                    {loansWithBalance.filter(loan => loan.remainingBalance > 0).map(loan => (
+                      <li key={loan.id} className="flex justify-between text-sm">
+                        <span>{loan.type}</span>
+                        <span className="font-medium">₹{loan.remainingBalance.toLocaleString()}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </dl>
           </CardContent>
         </Card>
         
-        <LoanRepayment defaultAmount={Math.max(0, outstandingAmount - repaidAmount)} />
+        <LoanRepayment defaultAmount={Math.min(user?.financialData?.currentBalance || 0, outstandingAmount)} />
       </div>
       
       <div className="mt-6">

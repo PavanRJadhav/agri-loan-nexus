@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
@@ -43,26 +42,36 @@ const LoanVerificationPage: React.FC = () => {
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key && key.startsWith('agriloan_userdata_')) {
-        const email = key.replace('agriloan_userdata_', '');
-        const userData = JSON.parse(localStorage.getItem(key) || '{}');
-        
-        if (userData.loans && Array.isArray(userData.loans)) {
-          // Calculate credit score
-          const creditAssessment = assessCreditworthiness(userData);
+        try {
+          const email = key.replace('agriloan_userdata_', '');
+          const userData = JSON.parse(localStorage.getItem(key) || '{}');
           
-          userData.loans.forEach((loan: any) => {
-            if (loan.status === 'pending') {
-              allLoans.push({
-                userId: userData.id || 'unknown',
-                userName: userData.name || email.split('@')[0],
-                userEmail: email,
-                loan,
-                creditScore: creditAssessment.creditScore * 100
-              });
-            }
-          });
+          if (userData.loans && Array.isArray(userData.loans)) {
+            // Calculate credit score
+            const creditAssessment = assessCreditworthiness(userData);
+            const creditScore = Math.round(creditAssessment.creditScore * 100);
+            
+            userData.loans.forEach((loan: any) => {
+              if (loan.status === 'pending') {
+                allLoans.push({
+                  userId: userData.id || 'unknown',
+                  userName: userData.name || email.split('@')[0],
+                  userEmail: email,
+                  loan,
+                  creditScore: creditScore
+                });
+              }
+            });
+          }
+        } catch (error) {
+          console.error("Error parsing user data:", error);
         }
       }
+    }
+    
+    console.log("LoanVerificationPage - Found pending loans:", allLoans.length);
+    if (allLoans.length > 0) {
+      console.log("Detailed pending loans:", allLoans);
     }
     
     return allLoans;

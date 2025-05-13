@@ -75,6 +75,17 @@ const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) 
         throw new Error("Selected loan not found");
       }
       
+      // Verify that the repayment amount is not greater than the remaining balance
+      if (numericAmount > selectedLoan.remainingBalance) {
+        toast({
+          title: "Invalid amount",
+          description: `The repayment amount cannot exceed the remaining balance of ₹${selectedLoan.remainingBalance.toLocaleString()}`,
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
       // Add repayment transaction
       addTransaction({
         amount: numericAmount,
@@ -151,6 +162,7 @@ const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) 
                 placeholder="Enter repayment amount"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
+                max={selectedLoanId ? loansWithBalance.find(loan => loan.id === selectedLoanId)?.remainingBalance : undefined}
               />
             </div>
             

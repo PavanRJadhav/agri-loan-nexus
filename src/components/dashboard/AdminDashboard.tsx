@@ -62,6 +62,9 @@ const AdminDashboard: React.FC = () => {
         new Date(b.loan.submittedAt).getTime() - new Date(a.loan.submittedAt).getTime()
       );
       
+      console.log("Admin dashboard - Users found:", users.length);
+      console.log("Admin dashboard - Loans found:", loans.length);
+      
       return { users, loans };
     };
     
@@ -69,8 +72,6 @@ const AdminDashboard: React.FC = () => {
     setAllUsers(data.users);
     setAllLoans(data.loans);
     
-    console.log("Admin dashboard - Users found:", data.users.length);
-    console.log("Admin dashboard - Loans found:", data.loans.length);
   }, []);
 
   // Calculate approval rate
