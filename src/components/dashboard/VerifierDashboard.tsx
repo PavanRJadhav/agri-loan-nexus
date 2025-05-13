@@ -3,11 +3,9 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreditCard, BarChart, ArrowDown, Users } from "lucide-react";
 import StatCard from "./StatCard";
-import ApplicationItem from "./ApplicationItem";
 import CreditScoreBoard from "./CreditScoreBoard";
-import { useAuth, LoanApplication } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { assessCreditworthiness } from "@/utils/creditScoring";
@@ -47,11 +45,12 @@ const VerifierDashboard: React.FC = () => {
             
             if (userData.name && email && userData.loans && userData.loans.length > 0) {
               // Filter only pending loans
-              const pending = userData.loans.filter((loan: LoanApplication) => loan.status === "pending");
+              const pending = userData.loans.filter((loan: any) => loan.status === "pending");
               
-              pending.forEach((loan: LoanApplication) => {
-                // Calculate credit score
+              pending.forEach((loan: any) => {
+                // Calculate credit score using the assessCreditworthiness function
                 const creditAssessment = assessCreditworthiness(userData);
+                const creditScore = creditAssessment.creditScore * 100;
                 
                 pendingLoans.push({
                   id: `${email}-${loan.id}`,
@@ -60,11 +59,11 @@ const VerifierDashboard: React.FC = () => {
                   amount: loan.amount,
                   userEmail: email,
                   userName: userData.name,
-                  applicantInitial: userData.name.split(" ").map((n: string) => n[0]).join(""),
+                  applicantInitial: userData.name.charAt(0).toUpperCase(),
                   submittedAt: loan.submittedAt,
                   purpose: loan.purpose,
                   userData: userData,
-                  creditScore: creditAssessment.creditScore * 100
+                  creditScore: creditScore
                 });
               });
             }
@@ -73,6 +72,8 @@ const VerifierDashboard: React.FC = () => {
           }
         }
       }
+      
+      console.log("Verifier dashboard - Pending loans found:", pendingLoans.length);
       
       // Sort by submission date (newest first)
       return pendingLoans.sort((a, b) => 
@@ -109,7 +110,7 @@ const VerifierDashboard: React.FC = () => {
       
       // Update the loan status
       if (parsedData.loans) {
-        const updatedLoans = parsedData.loans.map((loan: LoanApplication) => {
+        const updatedLoans = parsedData.loans.map((loan: any) => {
           if (loan.id === application.loanId) {
             return { ...loan, status: "approved" };
           }
@@ -164,15 +165,26 @@ const VerifierDashboard: React.FC = () => {
       
       // Update the loan status
       if (parsedData.loans) {
-        const updatedLoans = parsedData.loans.map((loan: LoanApplication) => {
+        const updatedLoans = parsedData.loans.map((loan: any) => {
           if (loan.id === application.loanId) {
             return { ...loan, status: "rejected" };
           }
           return loan;
         });
         
+        // Create a notification transaction
+        const transactions = parsedData.transactions || [];
+        transactions.push({
+          id: `txn-${Date.now()}`,
+          amount: 0,
+          type: "rejection",
+          description: `Loan application for ${application.type} was rejected`,
+          date: new Date().toISOString()
+        });
+        
         // Save back to localStorage
         parsedData.loans = updatedLoans;
+        parsedData.transactions = transactions;
         localStorage.setItem(userDataKey, JSON.stringify(parsedData));
         
         // Update local state
@@ -280,7 +292,7 @@ const VerifierDashboard: React.FC = () => {
               <div className="space-y-4">
                 {pendingApplications.map((app) => {
                   const daysAgo = Math.floor((Date.now() - new Date(app.submittedAt).getTime()) / (24 * 60 * 60 * 1000));
-                  const timeAgo = daysAgo > 0 ? `${daysAgo} day${daysAgo !== 1 ? 's' : ''}` : 'today';
+                  const timeAgo = daysAgo > 0 ? `${daysAgo} day${daysAgo !== 1 ? 's' : ''} ago` : 'today';
                   
                   return (
                     <div key={app.id} className="bg-gray-50 rounded-md p-4">
@@ -313,7 +325,10 @@ const VerifierDashboard: React.FC = () => {
                           <Button 
                             variant="outline" 
                             size="sm"
-                            onClick={() => viewLoanPurpose(app)}
+                            onClick={() => {
+                              handleSelectApplicant(app);
+                              viewLoanPurpose(app);
+                            }}
                           >
                             View Details
                           </Button>

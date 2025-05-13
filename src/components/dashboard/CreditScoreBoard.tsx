@@ -20,6 +20,7 @@ const CreditScoreBoard: React.FC<CreditScoreBoardProps> = ({ userData, isVerifie
     if (dataToUse) {
       const assessment = assessCreditworthiness(dataToUse);
       setCreditData(assessment);
+      console.log("Credit assessment:", assessment); // Debug log
     }
   }, [userData, user]);
   
