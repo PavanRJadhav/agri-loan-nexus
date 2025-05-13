@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -20,13 +19,13 @@ const LandingPage: React.FC = () => {
               <Link to="/" className="text-gray-900 hover:text-agriloan-primary px-3 py-2 text-sm font-medium">
                 Home
               </Link>
-              <Link to="/features" className="text-gray-500 hover:text-agriloan-primary px-3 py-2 text-sm font-medium">
+              <Link to="/" className="text-gray-500 hover:text-agriloan-primary px-3 py-2 text-sm font-medium">
                 Features
               </Link>
-              <Link to="/about" className="text-gray-500 hover:text-agriloan-primary px-3 py-2 text-sm font-medium">
+              <Link to="/" className="text-gray-500 hover:text-agriloan-primary px-3 py-2 text-sm font-medium">
                 About Us
               </Link>
-              <Link to="/contact" className="text-gray-500 hover:text-agriloan-primary px-3 py-2 text-sm font-medium">
+              <Link to="/" className="text-gray-500 hover:text-agriloan-primary px-3 py-2 text-sm font-medium">
                 Contact
               </Link>
             </nav>
@@ -278,19 +277,19 @@ const LandingPage: React.FC = () => {
               <h3 className="text-white font-medium mb-4">Quick Links</h3>
               <ul className="space-y-2 text-sm">
                 <li><Link to="/" className="hover:text-white">Home</Link></li>
-                <li><Link to="/features" className="hover:text-white">Features</Link></li>
-                <li><Link to="/about" className="hover:text-white">About Us</Link></li>
-                <li><Link to="/contact" className="hover:text-white">Contact</Link></li>
+                <li><Link to="/" className="hover:text-white">Features</Link></li>
+                <li><Link to="/" className="hover:text-white">About Us</Link></li>
+                <li><Link to="/" className="hover:text-white">Contact</Link></li>
               </ul>
             </div>
             
             <div>
               <h3 className="text-white font-medium mb-4">Resources</h3>
               <ul className="space-y-2 text-sm">
-                <li><Link to="/faq" className="hover:text-white">FAQ</Link></li>
-                <li><Link to="/support" className="hover:text-white">Support</Link></li>
-                <li><Link to="/terms" className="hover:text-white">Terms of Service</Link></li>
-                <li><Link to="/privacy" className="hover:text-white">Privacy Policy</Link></li>
+                <li><Link to="/" className="hover:text-white">FAQ</Link></li>
+                <li><Link to="/" className="hover:text-white">Support</Link></li>
+                <li><Link to="/" className="hover:text-white">Terms of Service</Link></li>
+                <li><Link to="/" className="hover:text-white">Privacy Policy</Link></li>
               </ul>
             </div>
             

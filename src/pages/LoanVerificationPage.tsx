@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -12,6 +12,20 @@ const LoanVerificationPage: React.FC = () => {
   const { user, addTransaction, sendNotification } = useAuth();
   const [viewDetails, setViewDetails] = useState(false);
   const [selectedLoan, setSelectedLoan] = useState<any>(null);
+  const [pendingLoans, setPendingLoans] = useState<Array<{
+    userId: string;
+    userName: string;
+    userEmail: string;
+    loan: any;
+    creditScore: number;
+  }>>([]);
+  
+  useEffect(() => {
+    // Get all pending loans on component mount
+    const allLoans = getAllPendingLoans();
+    setPendingLoans(allLoans);
+    console.log("Fetched pending loans:", allLoans);
+  }, []);
   
   // Process all loans from all users
   const getAllPendingLoans = () => {
@@ -53,8 +67,6 @@ const LoanVerificationPage: React.FC = () => {
     
     return allLoans;
   };
-  
-  const pendingLoans = getAllPendingLoans();
   
   const handleViewDetails = (loan: any) => {
     setSelectedLoan(loan);
@@ -108,6 +120,11 @@ const LoanVerificationPage: React.FC = () => {
       email: userEmail
     });
     
+    // Remove from pending loans list
+    setPendingLoans(prevLoans => 
+      prevLoans.filter(item => !(item.userEmail === userEmail && item.loan.id === loanId))
+    );
+    
     // Close dialog if open
     setViewDetails(false);
   };
@@ -153,6 +170,11 @@ const LoanVerificationPage: React.FC = () => {
       type: loan.type,
       email: userEmail
     });
+    
+    // Remove from pending loans list
+    setPendingLoans(prevLoans => 
+      prevLoans.filter(item => !(item.userEmail === userEmail && item.loan.id === loanId))
+    );
     
     // Close dialog if open
     setViewDetails(false);
