@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -150,9 +149,8 @@ const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) 
       
       // Display additional notification if loan is fully repaid
       if (numericAmount >= selectedLoan.remainingBalance) {
-        // Use the correct sonner toast syntax
-        toast({
-          title: "Loan fully repaid!",
+        // Fix: Use the correct sonner toast API
+        toast("Loan fully repaid!", {
           description: "Congratulations! You have fully repaid this loan."
         });
       }
