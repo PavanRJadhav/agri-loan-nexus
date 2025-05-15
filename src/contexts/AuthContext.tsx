@@ -17,6 +17,8 @@ export interface LoanApplication {
   purpose: string;
   status: "pending" | "approved" | "rejected";
   submittedAt: string;
+  paymentsMade?: number;
+  amountRepaid?: number;
 }
 
 export interface Transaction {

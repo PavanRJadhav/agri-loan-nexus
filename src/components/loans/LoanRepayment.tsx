@@ -15,7 +15,7 @@ interface LoanRepaymentProps {
 
 const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) => {
   const { user, addTransaction, updateUserData } = useAuth();
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
   const [amount, setAmount] = useState<string>(defaultAmount ? defaultAmount.toString() : '');
   const [selectedLoanId, setSelectedLoanId] = useState<string>(loanId || '');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -66,7 +66,7 @@ const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) 
 
   const handleRepayLoan = async () => {
     if (!amount || parseFloat(amount) <= 0) {
-      toast({
+      uiToast({
         title: "Invalid amount",
         description: "Please enter a valid repayment amount",
         variant: "destructive"
@@ -75,7 +75,7 @@ const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) 
     }
     
     if (!selectedLoanId) {
-      toast({
+      uiToast({
         title: "No loan selected",
         description: "Please select a loan to repay",
         variant: "destructive"
@@ -96,7 +96,7 @@ const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) 
       
       // Verify that the repayment amount is not greater than the remaining balance
       if (numericAmount > selectedLoan.remainingBalance) {
-        toast({
+        uiToast({
           title: "Invalid amount",
           description: `The repayment amount cannot exceed the remaining balance of ₹${selectedLoan.remainingBalance.toLocaleString()}`,
           variant: "destructive"
@@ -125,7 +125,7 @@ const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) 
       if (user?.loans) {
         const updatedLoans = user.loans.map(loan => {
           if (loan.id === selectedLoanId) {
-            // Fix: Use optional chaining for properties that might not exist on loan type
+            // Use optional chaining for properties that might not exist on loan type
             const prevPaymentsMade = loan.paymentsMade || 0;
             const prevAmountRepaid = loan.amountRepaid || 0;
             
@@ -143,15 +143,16 @@ const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) 
       }
       
       // Update UI with toast
-      toast({
+      uiToast({
         title: "Payment successful",
         description: `Successfully repaid ₹${numericAmount.toLocaleString()} for your loan.`,
       });
       
       // Display additional notification if loan is fully repaid
       if (numericAmount >= selectedLoan.remainingBalance) {
-        // Fix: Use the proper syntax for sonner toast
-        toast.message("Loan fully repaid!", {
+        // Use the correct sonner toast syntax
+        toast({
+          title: "Loan fully repaid!",
           description: "Congratulations! You have fully repaid this loan."
         });
       }
@@ -164,7 +165,7 @@ const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) 
       refreshAllUserData();
     } catch (error) {
       console.error("Error processing repayment:", error);
-      toast({
+      uiToast({
         title: "Payment failed",
         description: "There was an error processing your payment. Please try again.",
         variant: "destructive"
