@@ -22,16 +22,18 @@ const DashboardPage: React.FC = () => {
       if (user?.email) {
         try {
           const userDataKey = `agriloan_userdata_${user.email}`;
-          const userData = localStorage.getItem(userDataKey);
-          console.log("User data refreshed for dashboard");
-          
-          // Show toast notification for new loan applications
-          if (userData) {
-            const parsedData = JSON.parse(userData);
-            const pendingLoans = parsedData.loans?.filter((loan: any) => loan.status === "pending") || [];
+          const storedData = localStorage.getItem(userDataKey);
+          if (storedData) {
+            const parsedData = JSON.parse(storedData);
+            console.log("User data refreshed for dashboard:", parsedData);
             
-            if (pendingLoans.length > 0 && user.role === "farmer") {
-              toast.info(`You have ${pendingLoans.length} pending loan application(s)`);
+            // Show toast notification for new loan applications
+            if (parsedData.loans) {
+              const pendingLoans = parsedData.loans.filter((loan: any) => loan.status === "pending") || [];
+              
+              if (pendingLoans.length > 0 && user.role === "farmer") {
+                toast.info(`You have ${pendingLoans.length} pending loan application(s)`);
+              }
             }
           }
         } catch (error) {
@@ -42,31 +44,38 @@ const DashboardPage: React.FC = () => {
     
     refreshUserData();
     
-    // Set a refresh interval to check for updates every 15 seconds
+    // Set a refresh interval to check for updates every 10 seconds (reduced from 15)
     const intervalId = setInterval(() => {
       setRefreshTrigger(prev => prev + 1);
       refreshUserData();
-    }, 15000);
+    }, 10000);
     
     // Clear interval on component unmount
     return () => clearInterval(intervalId);
   }, [user]);
 
-  // Immediate refresh effect for role-specific actions
+  // Immediate refresh effect for role-specific actions with improved refresh mechanism
   useEffect(() => {
     if (user?.role === "admin" || user?.role === "verifier") {
       // Refresh all users data from localStorage for admin/verifier
       const getAllUsersData = () => {
+        console.log("Refreshing all users data for admin/verifier");
+        let foundUsers = 0;
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
           if (key && key.startsWith('agriloan_userdata_')) {
             try {
-              localStorage.getItem(key);
+              foundUsers++;
+              // Force a re-read of the data
+              const userData = JSON.parse(localStorage.getItem(key) || "{}");
+              // Write it back to ensure it's fresh
+              localStorage.setItem(key, JSON.stringify(userData));
             } catch (error) {
               console.error("Error refreshing all users data:", error);
             }
           }
         }
+        console.log(`Refreshed ${foundUsers} user profiles`);
       };
       
       getAllUsersData();
@@ -74,10 +83,11 @@ const DashboardPage: React.FC = () => {
   }, [refreshTrigger, user?.role]);
 
   return (
-    <div key={`dashboard-${user?.id}-${refreshTrigger}`}>
-      {user?.role === "farmer" && <FarmerDashboard userName={user.name || "Farmer"} />}
-      {user?.role === "admin" && <AdminDashboard key={`admin-${refreshTrigger}`} />}
-      {user?.role === "verifier" && <VerifierDashboard key={`verifier-${refreshTrigger}`} />}
+    // Add key with refresh trigger to force component re-rendering when data changes
+    <div key={`dashboard-${user?.id}-${refreshTrigger}-${Date.now()}`}>
+      {user?.role === "farmer" && <FarmerDashboard userName={user.name || "Farmer"} refreshKey={refreshTrigger} />}
+      {user?.role === "admin" && <AdminDashboard key={`admin-${refreshTrigger}-${Date.now()}`} />}
+      {user?.role === "verifier" && <VerifierDashboard key={`verifier-${refreshTrigger}-${Date.now()}`} />}
     </div>
   );
 };

@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,91 +13,133 @@ interface Message {
   timestamp: Date;
 }
 
-const predefinedResponses: Record<string, string[]> = {
-  loan: [
-    "Our agricultural loans range from ₹10,000 to ₹20,00,000 with competitive interest rates.",
-    "To apply for a loan, visit the 'Loan Applications' section from your dashboard.",
-    "Loan approval typically takes 3-5 business days after document verification."
-  ],
-  payment: [
-    "You can make payments through our portal using UPI, net banking, or debit cards.",
-    "Payments are processed within 24 hours and reflected in your account."
-  ],
-  interest: [
-    "Current interest rates range from 6.8% to 9.0% depending on the loan type and lending partner.",
-    "You can view interest rates for each lending partner in the 'Lenders' section."
-  ],
-  help: [
-    "I'm here to help with information about loans, payments, interest rates, and application processes.",
-    "You can also contact our support team at support@agriloan.com or call +91 1800 123 4567."
-  ]
+// Define structured responses for better organization
+const chatResponses = {
+  loanApplication: "To apply for a loan, go to your dashboard and click on 'New Application'. You'll need to select a lender first if you haven't already.",
+  loanStatus: "You can check the status of your loan applications on your dashboard. Applications can be pending, approved, or rejected.",
+  interestRates: "Current interest rates range from 6.8% to 9.0% depending on the loan type and lending partner. You can view specific rates in the 'Lenders' section.",
+  repaymentOptions: "You can repay your loan through our portal using UPI, net banking, or debit cards. Payments are processed within 24 hours.",
+  requiredDocuments: "Required documents include ID proof, address proof, land records, and income statements. Our verification team will review them within 2 working days.",
+  creditScore: "Your credit score is calculated based on your loan repayment history, income, and other financial factors. A score above 60 is required for loan approval.",
+  contactSupport: "For additional support, please email support@agriloan.com or call our helpline at +91 1800 123 4567, available Monday to Friday, 9 AM to 6 PM.",
+  missedPayment: "If you miss a payment, a late fee of 2% will be charged. Multiple missed payments may affect your credit score and future loan eligibility."
 };
+
+// Predefined questions for the user to select from
+const predefinedQuestions = [
+  { id: "loan-apply", text: "How do I apply for a loan?", response: chatResponses.loanApplication },
+  { id: "loan-status", text: "How can I check my loan status?", response: chatResponses.loanStatus },
+  { id: "interest", text: "What are the interest rates?", response: chatResponses.interestRates },
+  { id: "repay", text: "How do I repay my loan?", response: chatResponses.repaymentOptions },
+  { id: "docs", text: "What documents are required?", response: chatResponses.requiredDocuments },
+  { id: "credit", text: "How is my credit score calculated?", response: chatResponses.creditScore },
+  { id: "contact", text: "How do I contact support?", response: chatResponses.contactSupport },
+  { id: "missed", text: "What if I miss a payment?", response: chatResponses.missedPayment }
+];
 
 const SupportChatbot: React.FC = () => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
-      text: `Hello ${user?.name || "there"}! I'm AgriBot, your virtual assistant. How can I help you today?`,
+      text: `Hello ${user?.name || "there"}! I'm AgriBot, your virtual assistant. Please select a question below or type your query.`,
       sender: "bot",
       timestamp: new Date()
     }
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [suggestedQuestions, setSuggestedQuestions] = useState<typeof predefinedQuestions>(predefinedQuestions);
 
-  const generateResponse = (text: string): string => {
-    const lowercaseText = text.toLowerCase();
-    
-    // More specific matching for better relevance
-    if (lowercaseText.includes("loan application") || lowercaseText.includes("apply for loan")) {
-      return "To apply for a loan, go to your dashboard and click on 'New Application'. You'll need to select a lender first if you haven't already.";
-    } else if (lowercaseText.includes("loan status") || lowercaseText.includes("application status")) {
-      return "You can check the status of your loan applications on your dashboard. Applications can be pending, approved, or rejected.";
-    } else if (lowercaseText.includes("loan") || lowercaseText.includes("borrow") || lowercaseText.includes("credit")) {
-      return predefinedResponses.loan[Math.floor(Math.random() * predefinedResponses.loan.length)];
-    } else if (lowercaseText.includes("payment") || lowercaseText.includes("pay") || lowercaseText.includes("repay")) {
-      return predefinedResponses.payment[Math.floor(Math.random() * predefinedResponses.payment.length)];
-    } else if (lowercaseText.includes("interest") || lowercaseText.includes("rate")) {
-      return predefinedResponses.interest[Math.floor(Math.random() * predefinedResponses.interest.length)];
-    } else if (lowercaseText.includes("lender") || lowercaseText.includes("partner")) {
-      return "You can select your preferred lending partner from the 'Lenders' section. Each lender offers different interest rates and loan limits.";
-    } else if (lowercaseText.includes("document") || lowercaseText.includes("verify")) {
-      return "Required documents include ID proof, address proof, land records, and income statements. Our verification team will review them within 2 working days.";
-    } else if (lowercaseText.includes("dashboard") || lowercaseText.includes("view loans")) {
-      return "Your dashboard shows a summary of all your loan applications and their current status. You can access it after logging in.";
-    } else {
-      return predefinedResponses.help[Math.floor(Math.random() * predefinedResponses.help.length)];
-    }
-  };
+  // Listen for question selection events from the parent component
+  useEffect(() => {
+    const handleSelectedQuestion = (event: CustomEvent) => {
+      const question = event.detail;
+      if (question) {
+        handleQuestionClick(question);
+      }
+    };
 
-  const handleSend = () => {
-    if (!input.trim()) return;
+    window.addEventListener('chatQuestion' as any, handleSelectedQuestion as EventListener);
     
-    // Add user message
+    return () => {
+      window.removeEventListener('chatQuestion' as any, handleSelectedQuestion as EventListener);
+    };
+  }, []);
+
+  const handleQuestionClick = (questionText: string) => {
+    // Add user's question to chat
     const userMessage: Message = {
       id: `user-${Date.now()}`,
-      text: input.trim(),
+      text: questionText,
       sender: "user",
       timestamp: new Date()
     };
     
     setMessages(prev => [...prev, userMessage]);
-    setInput("");
     setIsTyping(true);
+    
+    // Find matching predefined question
+    const question = predefinedQuestions.find(q => q.text === questionText);
     
     // Simulate bot thinking
     setTimeout(() => {
       const botMessage: Message = {
         id: `bot-${Date.now()}`,
-        text: generateResponse(userMessage.text),
+        text: question?.response || generateResponse(questionText),
         sender: "bot",
         timestamp: new Date()
       };
       
       setMessages(prev => [...prev, botMessage]);
       setIsTyping(false);
-    }, 1000);
+      
+      // Update suggested questions based on the current question
+      updateSuggestedQuestions(questionText);
+    }, 800);
+  };
+
+  const updateSuggestedQuestions = (currentQuestion: string) => {
+    // Filter out the current question and shuffle the remaining ones
+    const filteredQuestions = predefinedQuestions
+      .filter(q => q.text !== currentQuestion)
+      .sort(() => 0.5 - Math.random())
+      .slice(0, 3);
+    
+    setSuggestedQuestions(filteredQuestions);
+  };
+
+  const generateResponse = (text: string): string => {
+    const lowercaseText = text.toLowerCase();
+    
+    // Match user query to predefined responses
+    if (lowercaseText.includes("apply") || lowercaseText.includes("application")) {
+      return chatResponses.loanApplication;
+    } else if (lowercaseText.includes("status") || lowercaseText.includes("check")) {
+      return chatResponses.loanStatus;
+    } else if (lowercaseText.includes("interest") || lowercaseText.includes("rate")) {
+      return chatResponses.interestRates;
+    } else if (lowercaseText.includes("repay") || lowercaseText.includes("payment")) {
+      return chatResponses.repaymentOptions;
+    } else if (lowercaseText.includes("document") || lowercaseText.includes("require")) {
+      return chatResponses.requiredDocuments;
+    } else if (lowercaseText.includes("credit") || lowercaseText.includes("score")) {
+      return chatResponses.creditScore;
+    } else if (lowercaseText.includes("contact") || lowercaseText.includes("support") || lowercaseText.includes("help")) {
+      return chatResponses.contactSupport;
+    } else if (lowercaseText.includes("miss") || lowercaseText.includes("late")) {
+      return chatResponses.missedPayment;
+    } else {
+      return "I'm not sure I understand. Could you please select one of the suggested questions or rephrase your query?";
+    }
+  };
+
+  const handleSend = () => {
+    if (!input.trim()) return;
+    
+    const questionText = input.trim();
+    setInput("");
+    handleQuestionClick(questionText);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -145,6 +187,23 @@ const SupportChatbot: React.FC = () => {
             </div>
           </div>
         )}
+        
+        {/* Suggested questions after bot response */}
+        {messages.length > 0 && messages[messages.length - 1].sender === 'bot' && !isTyping && (
+          <div className="flex flex-wrap gap-2 mt-3 ml-12">
+            {suggestedQuestions.slice(0, 3).map(question => (
+              <Button 
+                key={question.id}
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleQuestionClick(question.text)}
+                className="text-xs"
+              >
+                {question.text}
+              </Button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="border-t p-4">
@@ -159,6 +218,21 @@ const SupportChatbot: React.FC = () => {
           <Button type="submit" size="icon" onClick={handleSend} disabled={!input.trim() || isTyping}>
             <Send className="h-4 w-4" />
           </Button>
+        </div>
+        
+        {/* Quick question buttons */}
+        <div className="flex flex-wrap gap-2 mt-3">
+          {predefinedQuestions.slice(0, 4).map(question => (
+            <Button 
+              key={question.id}
+              variant="ghost" 
+              size="sm" 
+              onClick={() => handleQuestionClick(question.text)}
+              className="text-xs"
+            >
+              {question.text}
+            </Button>
+          ))}
         </div>
       </div>
     </div>

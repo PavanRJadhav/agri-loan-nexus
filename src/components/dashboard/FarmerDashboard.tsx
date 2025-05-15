@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreditCard, BarChart, ArrowUp, CalendarDays, FileText, PlusCircle, Landmark, BanknoteIcon, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,19 +23,43 @@ import {
 
 interface FarmerDashboardProps {
   userName: string;
+  refreshKey?: number;
 }
 
-const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ userName }) => {
+const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ userName, refreshKey }) => {
   const { user, getUserFinancialData, updateUserData } = useAuth();
   const financialData = getUserFinancialData();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [loanToDelete, setLoanToDelete] = useState<string | null>(null);
+  const [localLoans, setLocalLoans] = useState(user?.loans || []);
+  
+  // Update local loans whenever user or refreshKey changes
+  useEffect(() => {
+    // Force a refresh of loans from localStorage to ensure we have latest data
+    if (user?.email) {
+      try {
+        const userDataKey = `agriloan_userdata_${user.email}`;
+        const userData = localStorage.getItem(userDataKey);
+        if (userData) {
+          const parsedData = JSON.parse(userData);
+          if (parsedData.loans) {
+            console.log("FarmerDashboard - Refreshed loans:", parsedData.loans.length);
+            setLocalLoans(parsedData.loans);
+          }
+        }
+      } catch (error) {
+        console.error("Error refreshing loans data in FarmerDashboard:", error);
+      }
+    } else {
+      setLocalLoans(user?.loans || []);
+    }
+  }, [user, refreshKey]);
   
   // Calculate total loan amount from applications
-  const totalLoanAmount = user?.loans?.reduce((total, loan) => total + loan.amount, 0) || 0;
+  const totalLoanAmount = localLoans?.reduce((total, loan) => total + loan.amount, 0) || 0;
   
   // Get total approved loan amount
-  const approvedLoanAmount = user?.loans
+  const approvedLoanAmount = localLoans
     ?.filter(loan => loan.status === "approved")
     ?.reduce((total, loan) => total + loan.amount, 0) || 0;
   
@@ -49,12 +72,14 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ userName }) => {
   const outstandingBalance = Math.max(0, approvedLoanAmount - repaidAmount);
   
   // Count active applications
-  const activeApplications = user?.loans?.length || 0;
-  const approvedApplications = user?.loans?.filter(loan => loan.status === "approved").length || 0;
-  const pendingApplications = user?.loans?.filter(loan => loan.status === "pending").length || 0;
+  const activeApplications = localLoans?.length || 0;
+  const approvedApplications = localLoans?.filter(loan => loan.status === "approved").length || 0;
+  const pendingApplications = localLoans?.filter(loan => loan.status === "pending").length || 0;
   
-  // Get latest loans
-  const recentLoans = user?.loans?.slice(0, 3) || [];
+  // Get latest loans - sort by submission date (newest first)
+  const recentLoans = [...(localLoans || [])]
+    .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
+    .slice(0, 3);
   
   // Get credit score
   const creditAssessment = assessCreditworthiness(user || {});
@@ -68,8 +93,9 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ userName }) => {
 
   const confirmDeleteApplication = () => {
     if (loanToDelete && user) {
-      const updatedLoans = user.loans?.filter(loan => loan.id !== loanToDelete) || [];
+      const updatedLoans = localLoans?.filter(loan => loan.id !== loanToDelete) || [];
       updateUserData({ loans: updatedLoans });
+      setLocalLoans(updatedLoans);
       toast.success("Loan application deleted successfully");
     }
     setDeleteDialogOpen(false);
