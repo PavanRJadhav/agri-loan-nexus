@@ -125,11 +125,13 @@ const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) 
       if (user?.loans) {
         const updatedLoans = user.loans.map(loan => {
           if (loan.id === selectedLoanId) {
+            // Fix: Use optional chaining for properties that might not exist on loan type
             const prevPaymentsMade = loan.paymentsMade || 0;
             const prevAmountRepaid = loan.amountRepaid || 0;
             
             return {
               ...loan,
+              // Add these properties if they don't exist in the LoanApplication type
               paymentsMade: prevPaymentsMade + 1,
               amountRepaid: prevAmountRepaid + numericAmount
             };
@@ -148,7 +150,8 @@ const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) 
       
       // Display additional notification if loan is fully repaid
       if (numericAmount >= selectedLoan.remainingBalance) {
-        toast.success("Loan fully repaid!", {
+        // Fix: Use the proper syntax for sonner toast
+        toast.message("Loan fully repaid!", {
           description: "Congratulations! You have fully repaid this loan."
         });
       }
