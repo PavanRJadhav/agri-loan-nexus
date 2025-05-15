@@ -34,20 +34,25 @@ const LoanApplicationPage: React.FC = () => {
       // Get the selected loan type name
       const loanTypeName = data.loanType;
       
-      // Add loan application
+      // Add loan application with proper submission date and initial pending status
       const application = {
+        id: `loan-${Date.now()}`,
         type: loanTypeName,
         amount: parseFloat(data.amount),
         purpose: data.purpose,
-        lender: user?.preferredLender?.name || "Unknown Lender"
+        lender: user?.preferredLender?.name || "Unknown Lender",
+        status: "pending",
+        submittedAt: new Date().toISOString(),
+        paymentsMade: 0,
+        amountRepaid: 0
       };
       
       // Add application to user's loans
-      addLoanApplication(application);
+      await addLoanApplication(application);
       
       // Add application fee deduction (Rs. 500)
       const currentBalance = user?.financialData?.currentBalance || 0;
-      updateUserData({
+      await updateUserData({
         financialData: {
           ...user?.financialData,
           currentBalance: Math.max(0, currentBalance - 500) // Ensure balance doesn't go negative
@@ -56,10 +61,12 @@ const LoanApplicationPage: React.FC = () => {
       
       // Add transaction for application fee
       if (user) {
-        addTransaction({
+        await addTransaction({
+          id: `txn-${Date.now()}`,
           amount: 500,
           type: "payment",
           description: "Loan application processing fee",
+          date: new Date().toISOString()
         });
       }
       
@@ -67,6 +74,16 @@ const LoanApplicationPage: React.FC = () => {
       toast.success("Application Submitted", {
         description: "Your loan application has been submitted successfully.",
       });
+      
+      // Force refresh local storage to ensure changes are saved
+      if (user?.email) {
+        const userDataKey = `agriloan_userdata_${user.email}`;
+        const userData = localStorage.getItem(userDataKey);
+        if (userData) {
+          const parsedData = JSON.parse(userData);
+          localStorage.setItem(userDataKey, JSON.stringify(parsedData));
+        }
+      }
       
       // Navigate back to dashboard
       setTimeout(() => {

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreditCard, BarChart, ArrowDown, Users } from "lucide-react";
@@ -28,11 +29,14 @@ const VerifierDashboard: React.FC = () => {
   
   const [selectedApplicant, setSelectedApplicant] = useState<any>(null);
   const [viewLoanDetails, setViewLoanDetails] = useState<boolean>(false);
+  const [refreshTime, setRefreshTime] = useState(Date.now());
 
   useEffect(() => {
     // Get all pending loan applications from localStorage
     const getAllPendingLoans = () => {
       const pendingLoans: any[] = [];
+      
+      console.log("Verifier dashboard - Refreshing pending loans at:", new Date().toISOString());
       
       // Loop through localStorage to find all users and their loans
       for (let i = 0; i < localStorage.length; i++) {
@@ -87,10 +91,17 @@ const VerifierDashboard: React.FC = () => {
     setPendingApplications(applications);
     
     // Set the first applicant as selected by default if available
-    if (applications.length > 0) {
+    if (applications.length > 0 && !selectedApplicant) {
       setSelectedApplicant(applications[0]);
     }
-  }, []);
+    
+    // Setup refresh interval
+    const intervalId = setInterval(() => {
+      setRefreshTime(Date.now());
+    }, 10000); // Refresh every 10 seconds
+    
+    return () => clearInterval(intervalId);
+  }, [refreshTime, selectedApplicant]);
 
   const handleApprove = (application: any) => {
     // Check if the credit score is at least 60 (eligible)
@@ -114,14 +125,17 @@ const VerifierDashboard: React.FC = () => {
       if (parsedData.loans) {
         const updatedLoans = parsedData.loans.map((loan: any) => {
           if (loan.id === application.loanId) {
-            return { ...loan, status: "approved" };
+            return { ...loan, status: "approved", approvedAt: new Date().toISOString() };
           }
           return loan;
         });
         
         // Update current balance
-        const currentBalance = parsedData.currentBalance || 0;
-        parsedData.currentBalance = currentBalance + application.amount;
+        const currentBalance = parsedData.financialData?.currentBalance || 0;
+        const updatedFinancialData = {
+          ...parsedData.financialData,
+          currentBalance: currentBalance + application.amount
+        };
         
         // Create a disbursement transaction
         const transactions = parsedData.transactions || [];
@@ -136,6 +150,7 @@ const VerifierDashboard: React.FC = () => {
         // Save back to localStorage
         parsedData.loans = updatedLoans;
         parsedData.transactions = transactions;
+        parsedData.financialData = updatedFinancialData;
         localStorage.setItem(userDataKey, JSON.stringify(parsedData));
         
         // Update local state

@@ -11,6 +11,7 @@ const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [allLoans, setAllLoans] = useState<{id: string, loan: LoanApplication, userName: string}[]>([]);
+  const [refreshTime, setRefreshTime] = useState(Date.now());
   
   useEffect(() => {
     // Get all users and their loans from localStorage
@@ -72,7 +73,13 @@ const AdminDashboard: React.FC = () => {
     setAllUsers(data.users);
     setAllLoans(data.loans);
     
-  }, []);
+    // Setup refresh interval
+    const intervalId = setInterval(() => {
+      setRefreshTime(Date.now());
+    }, 10000); // Refresh every 10 seconds
+    
+    return () => clearInterval(intervalId);
+  }, [refreshTime]);
 
   // Calculate approval rate
   const approvedApplications = allLoans.filter(item => item.loan.status === "approved").length;

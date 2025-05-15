@@ -49,7 +49,12 @@ const SupportChatbot: React.FC = () => {
   const generateResponse = (text: string): string => {
     const lowercaseText = text.toLowerCase();
     
-    if (lowercaseText.includes("loan") || lowercaseText.includes("borrow") || lowercaseText.includes("credit")) {
+    // More specific matching for better relevance
+    if (lowercaseText.includes("loan application") || lowercaseText.includes("apply for loan")) {
+      return "To apply for a loan, go to your dashboard and click on 'New Application'. You'll need to select a lender first if you haven't already.";
+    } else if (lowercaseText.includes("loan status") || lowercaseText.includes("application status")) {
+      return "You can check the status of your loan applications on your dashboard. Applications can be pending, approved, or rejected.";
+    } else if (lowercaseText.includes("loan") || lowercaseText.includes("borrow") || lowercaseText.includes("credit")) {
       return predefinedResponses.loan[Math.floor(Math.random() * predefinedResponses.loan.length)];
     } else if (lowercaseText.includes("payment") || lowercaseText.includes("pay") || lowercaseText.includes("repay")) {
       return predefinedResponses.payment[Math.floor(Math.random() * predefinedResponses.payment.length)];
@@ -59,6 +64,8 @@ const SupportChatbot: React.FC = () => {
       return "You can select your preferred lending partner from the 'Lenders' section. Each lender offers different interest rates and loan limits.";
     } else if (lowercaseText.includes("document") || lowercaseText.includes("verify")) {
       return "Required documents include ID proof, address proof, land records, and income statements. Our verification team will review them within 2 working days.";
+    } else if (lowercaseText.includes("dashboard") || lowercaseText.includes("view loans")) {
+      return "Your dashboard shows a summary of all your loan applications and their current status. You can access it after logging in.";
     } else {
       return predefinedResponses.help[Math.floor(Math.random() * predefinedResponses.help.length)];
     }
