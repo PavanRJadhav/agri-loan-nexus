@@ -44,42 +44,49 @@ const DashboardPage: React.FC = () => {
     
     refreshUserData();
     
-    // Set a refresh interval to check for updates every 10 seconds (reduced from 15)
+    // Set a refresh interval to check for updates every 5 seconds (more frequent than before)
     const intervalId = setInterval(() => {
       setRefreshTrigger(prev => prev + 1);
       refreshUserData();
-    }, 10000);
+    }, 5000);
     
     // Clear interval on component unmount
     return () => clearInterval(intervalId);
   }, [user]);
 
-  // Immediate refresh effect for role-specific actions with improved refresh mechanism
+  // Enhanced refresh mechanism for ALL user roles
   useEffect(() => {
-    if (user?.role === "admin" || user?.role === "verifier") {
-      // Refresh all users data from localStorage for admin/verifier
-      const getAllUsersData = () => {
-        console.log("Refreshing all users data for admin/verifier");
-        let foundUsers = 0;
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && key.startsWith('agriloan_userdata_')) {
-            try {
-              foundUsers++;
-              // Force a re-read of the data
-              const userData = JSON.parse(localStorage.getItem(key) || "{}");
+    // This will run for all roles to ensure consistent data refresh
+    const refreshAllDataInLocalStorage = () => {
+      console.log(`Refreshing all data for ${user?.role} dashboard...`);
+      
+      // For all users, ensure localStorage data is fresh
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('agriloan_userdata_')) {
+          try {
+            const userData = JSON.parse(localStorage.getItem(key) || "{}");
+            
+            // Force a re-read of the data
+            if (userData) {
               // Write it back to ensure it's fresh
               localStorage.setItem(key, JSON.stringify(userData));
-            } catch (error) {
-              console.error("Error refreshing all users data:", error);
+              
+              // Log data details for debugging
+              if (userData.loans && userData.loans.length > 0) {
+                console.log(`Refreshed ${userData.loans.length} loans for ${key.replace('agriloan_userdata_', '')}`);
+              }
             }
+          } catch (error) {
+            console.error("Error refreshing user data:", error);
           }
         }
-        console.log(`Refreshed ${foundUsers} user profiles`);
-      };
-      
-      getAllUsersData();
-    }
+      }
+    };
+    
+    // Execute refresh immediately
+    refreshAllDataInLocalStorage();
+    
   }, [refreshTrigger, user?.role]);
 
   return (

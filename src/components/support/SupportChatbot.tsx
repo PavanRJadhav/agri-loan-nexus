@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Bot, Send, User } from "lucide-react";
+import { Bot, Send, User, HelpCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface Message {
@@ -15,17 +15,21 @@ interface Message {
 
 // Define structured responses for better organization
 const chatResponses = {
-  loanApplication: "To apply for a loan, go to your dashboard and click on 'New Application'. You'll need to select a lender first if you haven't already.",
-  loanStatus: "You can check the status of your loan applications on your dashboard. Applications can be pending, approved, or rejected.",
+  loanApplication: "To apply for a loan, go to your dashboard and click on 'New Application'. You'll be guided through our new step-by-step application process that includes farm details, financial information, banking details, document upload, lender selection, and final review.",
+  loanStatus: "You can check the status of your loan applications on your dashboard. Applications can be pending, approved, or rejected. Once submitted, your application will be reviewed by our verification team.",
   interestRates: "Current interest rates range from 6.8% to 9.0% depending on the loan type and lending partner. You can view specific rates in the 'Lenders' section.",
   repaymentOptions: "You can repay your loan through our portal using UPI, net banking, or debit cards. Payments are processed within 24 hours.",
-  requiredDocuments: "Required documents include ID proof, address proof, land records, and income statements. Our verification team will review them within 2 working days.",
+  requiredDocuments: "Required documents include ID proof (Aadhaar/PAN), address proof, land records, income statements, and bank statements. Our verification team will review them within 2 working days.",
   creditScore: "Your credit score is calculated based on your loan repayment history, income, and other financial factors. A score above 60 is required for loan approval.",
   contactSupport: "For additional support, please email support@agriloan.com or call our helpline at +91 1800 123 4567, available Monday to Friday, 9 AM to 6 PM.",
-  missedPayment: "If you miss a payment, a late fee of 2% will be charged. Multiple missed payments may affect your credit score and future loan eligibility."
+  missedPayment: "If you miss a payment, a late fee of 2% will be charged. Multiple missed payments may affect your credit score and future loan eligibility.",
+  eligibilityCriteria: "To be eligible for a loan, you must be a farmer with valid land records, have a credit score above 60, and provide necessary documentation. Minimum income requirements vary by loan type.",
+  subsidySchemes: "Various government subsidy schemes are available for farmers. These include interest subvention, crop insurance subsidies, and equipment purchase subsidies. Check the 'Subsidies' section for more details.",
+  cropInsurance: "Our partners offer crop insurance that protects against natural disasters, pest attacks, and market fluctuations. Insurance premiums can be included in your loan application.",
+  loanTypes: "We offer various loan types including Crop Loans, Equipment Financing, Land Development Loans, Warehouse Construction Loans, and Farm Expansion Loans. Each has different terms and interest rates."
 };
 
-// Predefined questions for the user to select from
+// Predefined questions for the user to select from - expanded list
 const predefinedQuestions = [
   { id: "loan-apply", text: "How do I apply for a loan?", response: chatResponses.loanApplication },
   { id: "loan-status", text: "How can I check my loan status?", response: chatResponses.loanStatus },
@@ -34,7 +38,31 @@ const predefinedQuestions = [
   { id: "docs", text: "What documents are required?", response: chatResponses.requiredDocuments },
   { id: "credit", text: "How is my credit score calculated?", response: chatResponses.creditScore },
   { id: "contact", text: "How do I contact support?", response: chatResponses.contactSupport },
-  { id: "missed", text: "What if I miss a payment?", response: chatResponses.missedPayment }
+  { id: "missed", text: "What if I miss a payment?", response: chatResponses.missedPayment },
+  { id: "eligibility", text: "What are the eligibility criteria?", response: chatResponses.eligibilityCriteria },
+  { id: "subsidy", text: "Are there any subsidy schemes?", response: chatResponses.subsidySchemes },
+  { id: "insurance", text: "Do you offer crop insurance?", response: chatResponses.cropInsurance },
+  { id: "types", text: "What types of loans are available?", response: chatResponses.loanTypes }
+];
+
+// Group questions by category for better organization
+const questionCategories = [
+  {
+    title: "Loan Application",
+    questions: ["How do I apply for a loan?", "What documents are required?", "What are the eligibility criteria?"]
+  },
+  {
+    title: "Loan Management",
+    questions: ["How can I check my loan status?", "How do I repay my loan?", "What if I miss a payment?"]
+  },
+  {
+    title: "Financial Information",
+    questions: ["What are the interest rates?", "How is my credit score calculated?", "What types of loans are available?"]
+  },
+  {
+    title: "Support & Services",
+    questions: ["How do I contact support?", "Are there any subsidy schemes?", "Do you offer crop insurance?"]
+  }
 ];
 
 const SupportChatbot: React.FC = () => {
@@ -42,14 +70,14 @@ const SupportChatbot: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
-      text: `Hello ${user?.name || "there"}! I'm AgriBot, your virtual assistant. Please select a question below or type your query.`,
+      text: `Hello ${user?.name || "there"}! I'm AgriBot, your virtual assistant. How can I help you today?`,
       sender: "bot",
       timestamp: new Date()
     }
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [suggestedQuestions, setSuggestedQuestions] = useState<typeof predefinedQuestions>(predefinedQuestions);
+  const [currentCategory, setCurrentCategory] = useState<string | null>(null);
 
   // Listen for question selection events from the parent component
   useEffect(() => {
@@ -78,6 +106,7 @@ const SupportChatbot: React.FC = () => {
     
     setMessages(prev => [...prev, userMessage]);
     setIsTyping(true);
+    setCurrentCategory(null); // Reset category view after selecting a question
     
     // Find matching predefined question
     const question = predefinedQuestions.find(q => q.text === questionText);
@@ -93,20 +122,7 @@ const SupportChatbot: React.FC = () => {
       
       setMessages(prev => [...prev, botMessage]);
       setIsTyping(false);
-      
-      // Update suggested questions based on the current question
-      updateSuggestedQuestions(questionText);
     }, 800);
-  };
-
-  const updateSuggestedQuestions = (currentQuestion: string) => {
-    // Filter out the current question and shuffle the remaining ones
-    const filteredQuestions = predefinedQuestions
-      .filter(q => q.text !== currentQuestion)
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 3);
-    
-    setSuggestedQuestions(filteredQuestions);
   };
 
   const generateResponse = (text: string): string => {
@@ -129,8 +145,16 @@ const SupportChatbot: React.FC = () => {
       return chatResponses.contactSupport;
     } else if (lowercaseText.includes("miss") || lowercaseText.includes("late")) {
       return chatResponses.missedPayment;
+    } else if (lowercaseText.includes("eligib")) {
+      return chatResponses.eligibilityCriteria;
+    } else if (lowercaseText.includes("subsid") || lowercaseText.includes("scheme")) {
+      return chatResponses.subsidySchemes;
+    } else if (lowercaseText.includes("insurance") || lowercaseText.includes("crop insur")) {
+      return chatResponses.cropInsurance;
+    } else if (lowercaseText.includes("type") || lowercaseText.includes("kind") || lowercaseText.includes("offer")) {
+      return chatResponses.loanTypes;
     } else {
-      return "I'm not sure I understand. Could you please select one of the suggested questions or rephrase your query?";
+      return "I'm not sure I understand. Please select one of the suggested categories or questions to get the information you need.";
     }
   };
 
@@ -146,6 +170,16 @@ const SupportChatbot: React.FC = () => {
     if (e.key === 'Enter') {
       handleSend();
     }
+  };
+
+  const handleCategorySelect = (category: string) => {
+    setCurrentCategory(category);
+  };
+
+  // Get questions for the current category
+  const getCategoryQuestions = () => {
+    const category = questionCategories.find(cat => cat.title === currentCategory);
+    return category ? category.questions : [];
   };
 
   return (
@@ -187,26 +221,53 @@ const SupportChatbot: React.FC = () => {
             </div>
           </div>
         )}
-        
-        {/* Suggested questions after bot response */}
-        {messages.length > 0 && messages[messages.length - 1].sender === 'bot' && !isTyping && (
-          <div className="flex flex-wrap gap-2 mt-3 ml-12">
-            {suggestedQuestions.slice(0, 3).map(question => (
-              <Button 
-                key={question.id}
-                variant="outline" 
-                size="sm" 
-                onClick={() => handleQuestionClick(question.text)}
-                className="text-xs"
-              >
-                {question.text}
-              </Button>
-            ))}
-          </div>
-        )}
       </div>
 
       <div className="border-t p-4">
+        {/* Category selection */}
+        {!currentCategory && !isTyping && (
+          <div className="mb-4">
+            <h3 className="text-sm font-medium mb-2">How can I help you today?</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {questionCategories.map((category) => (
+                <Button 
+                  key={category.title} 
+                  variant="outline" 
+                  className="justify-start text-left"
+                  onClick={() => handleCategorySelect(category.title)}
+                >
+                  <HelpCircle className="mr-2 h-4 w-4" />
+                  {category.title}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Questions for selected category */}
+        {currentCategory && !isTyping && (
+          <div className="mb-4">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-sm font-medium">{currentCategory}</h3>
+              <Button variant="ghost" size="sm" onClick={() => setCurrentCategory(null)}>
+                Back to categories
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {getCategoryQuestions().map((question) => (
+                <Button 
+                  key={question} 
+                  variant="outline" 
+                  className="w-full justify-start text-left"
+                  onClick={() => handleQuestionClick(question)}
+                >
+                  {question}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex gap-2">
           <Input
             placeholder="Type a message..."
@@ -218,21 +279,6 @@ const SupportChatbot: React.FC = () => {
           <Button type="submit" size="icon" onClick={handleSend} disabled={!input.trim() || isTyping}>
             <Send className="h-4 w-4" />
           </Button>
-        </div>
-        
-        {/* Quick question buttons */}
-        <div className="flex flex-wrap gap-2 mt-3">
-          {predefinedQuestions.slice(0, 4).map(question => (
-            <Button 
-              key={question.id}
-              variant="ghost" 
-              size="sm" 
-              onClick={() => handleQuestionClick(question.text)}
-              className="text-xs"
-            >
-              {question.text}
-            </Button>
-          ))}
         </div>
       </div>
     </div>

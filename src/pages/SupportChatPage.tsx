@@ -6,17 +6,26 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import { HelpCircle } from "lucide-react";
 
-// Define common questions that users might ask - these match the available responses in the chatbot
-const commonQuestions = [
-  "How do I apply for a loan?",
-  "What are the interest rates?",
-  "How can I check my loan status?",
-  "How do I repay my loan?",
-  "What documents are required?",
-  "How is my credit score calculated?",
-  "How do I contact support?",
-  "What if I miss a payment?"
+// Define categories of support questions
+const supportCategories = [
+  {
+    title: "Loan Application",
+    questions: ["How do I apply for a loan?", "What documents are required?", "What are the eligibility criteria?"]
+  },
+  {
+    title: "Loan Management",
+    questions: ["How can I check my loan status?", "How do I repay my loan?", "What if I miss a payment?"]
+  },
+  {
+    title: "Financial Information",
+    questions: ["What are the interest rates?", "How is my credit score calculated?", "What types of loans are available?"]
+  },
+  {
+    title: "Support & Services",
+    questions: ["How do I contact support?", "Are there any subsidy schemes?", "Do you offer crop insurance?"]
+  }
 ];
 
 const SupportChatPage: React.FC = () => {
@@ -75,19 +84,28 @@ const SupportChatPage: React.FC = () => {
         <div className="lg:w-1/4 space-y-4">
           <Card>
             <CardContent className="pt-6">
-              <h3 className="text-lg font-medium mb-3">Common Questions</h3>
-              <div className="space-y-2">
-                {commonQuestions.map((question, index) => (
-                  <Button 
-                    key={index} 
-                    variant="outline" 
-                    className="w-full justify-start text-left h-auto py-2 px-3"
-                    onClick={() => handleQuestionClick(question)}
-                  >
-                    {question}
-                  </Button>
-                ))}
-              </div>
+              <h3 className="text-lg font-medium mb-3">Popular Topics</h3>
+              
+              {supportCategories.map((category, index) => (
+                <div key={index} className="mb-4">
+                  <h4 className="text-sm font-medium flex items-center mb-2">
+                    <HelpCircle className="h-4 w-4 mr-1 text-primary" />
+                    {category.title}
+                  </h4>
+                  <div className="space-y-2">
+                    {category.questions.map((question, qIndex) => (
+                      <Button 
+                        key={qIndex} 
+                        variant="outline" 
+                        className="w-full justify-start text-left h-auto py-2 px-3 text-sm"
+                        onClick={() => handleQuestionClick(question)}
+                      >
+                        {question}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </CardContent>
           </Card>
         </div>
