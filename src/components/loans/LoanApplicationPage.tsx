@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
 import LoanApplicationForm from "./LoanApplicationForm";
 import { useAuth } from "@/contexts/AuthContext";
@@ -62,11 +62,11 @@ const LoanApplicationPage: React.FC = () => {
       // Add transaction for application fee
       if (user) {
         await addTransaction({
-          id: `txn-${Date.now()}`,
+          // Remove the 'id' property since it will be added by addTransaction
           amount: 500,
           type: "payment",
-          description: "Loan application processing fee",
-          date: new Date().toISOString()
+          description: "Loan application processing fee"
+          // Remove the 'date' property since it will be added by addTransaction
         });
       }
       
