@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, Eye } from "lucide-react";
+import { CheckCircle, XCircle, Eye, RefreshCw } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { assessCreditworthiness } from "@/utils/creditScoring";
 
@@ -18,15 +19,47 @@ const LoanVerificationPage: React.FC = () => {
     loan: any;
     creditScore: number;
   }>>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
+  // Initial load and periodic refresh
   useEffect(() => {
-    // Get all pending loans on component mount
-    const allLoans = getAllPendingLoans();
-    setPendingLoans(allLoans);
-    console.log("Fetched pending loans:", allLoans);
+    fetchPendingLoans();
+    
+    // Set up periodic refresh
+    const intervalId = setInterval(() => {
+      fetchPendingLoans(false); // silent refresh
+    }, 10000);
+    
+    return () => clearInterval(intervalId);
   }, []);
   
-  // Process all loans from all users
+  // Function to fetch all pending loans
+  const fetchPendingLoans = (showToast = true) => {
+    if (showToast) {
+      setIsRefreshing(true);
+    }
+    
+    // Get all pending loans
+    const allLoans = getAllPendingLoans();
+    setPendingLoans(allLoans);
+    
+    if (showToast) {
+      if (allLoans.length > 0) {
+        toast.success(`Found ${allLoans.length} pending application(s)`, {
+          description: "The latest loan applications are now ready for review."
+        });
+      } else {
+        toast.info("No pending applications", {
+          description: "There are no loan applications requiring verification at this time."
+        });
+      }
+      setIsRefreshing(false);
+    }
+    
+    console.log("Fetched pending loans:", allLoans);
+  };
+  
+  // Process all loans from all users with improved debugging
   const getAllPendingLoans = () => {
     // In a real app, this would come from a backend API
     // Simulating getting all loans from localStorage
@@ -38,11 +71,15 @@ const LoanVerificationPage: React.FC = () => {
       creditScore: number;
     }> = [];
     
+    let usersChecked = 0;
+    let pendingLoansFound = 0;
+    
     // Try to get all users from localStorage (in a real app, this would be a database query)
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key && key.startsWith('agriloan_userdata_')) {
         try {
+          usersChecked++;
           const email = key.replace('agriloan_userdata_', '');
           const userData = JSON.parse(localStorage.getItem(key) || '{}');
           
@@ -53,6 +90,7 @@ const LoanVerificationPage: React.FC = () => {
             
             userData.loans.forEach((loan: any) => {
               if (loan.status === 'pending') {
+                pendingLoansFound++;
                 allLoans.push({
                   userId: userData.id || 'unknown',
                   userName: userData.name || email.split('@')[0],
@@ -69,12 +107,12 @@ const LoanVerificationPage: React.FC = () => {
       }
     }
     
-    console.log("LoanVerificationPage - Found pending loans:", allLoans.length);
-    if (allLoans.length > 0) {
-      console.log("Detailed pending loans:", allLoans);
-    }
+    console.log(`LoanVerificationPage - Checked ${usersChecked} users, found ${pendingLoansFound} pending loans`);
     
-    return allLoans;
+    // Sort by submission date, newest first
+    return allLoans.sort((a, b) => 
+      new Date(b.loan.submittedAt).getTime() - new Date(a.loan.submittedAt).getTime()
+    );
   };
   
   const handleViewDetails = (loan: any) => {
@@ -98,21 +136,25 @@ const LoanVerificationPage: React.FC = () => {
       loan.id === loanId ? { ...loan, status: 'approved' } : loan
     );
     
-    // Update the user's current balance
-    const currentBalance = userData.currentBalance || 0;
-    userData.currentBalance = currentBalance + amount;
+    // Update the user's financial data
+    const currentBalance = userData.financialData?.currentBalance || 0;
+    const updatedFinancialData = {
+      ...userData.financialData,
+      currentBalance: currentBalance + amount
+    };
     
     // Create a disbursement transaction
     const newTransaction = {
       id: `txn-${Date.now()}`,
       amount: amount,
       type: "disbursement",
-      description: `Loan disbursement - ${amount} approved`,
+      description: `Loan disbursement - ${loan.type} approved`,
       date: new Date().toISOString()
     };
     
-    // Update user data with new transaction
+    // Update user data with new transaction and financial data
     userData.loans = updatedLoans;
+    userData.financialData = updatedFinancialData;
     userData.transactions = [...(userData.transactions || []), newTransaction];
     
     // Save back to localStorage
@@ -199,11 +241,23 @@ const LoanVerificationPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Loan Verification</h2>
-        <p className="text-muted-foreground">
-          Review and verify pending loan applications
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Loan Verification</h2>
+          <p className="text-muted-foreground">
+            Review and verify pending loan applications
+          </p>
+        </div>
+        
+        <Button 
+          onClick={() => fetchPendingLoans()} 
+          variant="outline" 
+          className="flex items-center gap-2"
+          disabled={isRefreshing}
+        >
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          Refresh Applications
+        </Button>
       </div>
       
       <Card>
@@ -309,6 +363,11 @@ const LoanVerificationPage: React.FC = () => {
               <div>
                 <h4 className="text-sm font-medium">Loan Purpose</h4>
                 <p className="bg-gray-50 p-3 rounded-md">{selectedLoan.loan.purpose}</p>
+              </div>
+              
+              <div>
+                <h4 className="text-sm font-medium">Preferred Lender</h4>
+                <p>{selectedLoan.loan.lender}</p>
               </div>
               
               <div>

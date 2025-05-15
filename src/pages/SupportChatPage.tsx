@@ -1,14 +1,38 @@
 
-import React, { useState } from "react";
-import { Card } from "@/components/ui/card";
+import React, { useState, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import SupportChatbot from "@/components/support/SupportChatbot";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+
+// Define common questions that users might ask
+const commonQuestions = [
+  "How do I apply for a loan?",
+  "What are the interest rates?",
+  "How can I improve my credit score?",
+  "What documents are required for loan application?",
+  "When will my loan application be processed?",
+  "How do I repay my loan?",
+  "What happens if I miss a payment?",
+  "Can I apply for multiple loans?"
+];
 
 const SupportChatPage: React.FC = () => {
   const [emailNotifications, setEmailNotifications] = useState(true);
+  const [selectedQuestion, setSelectedQuestion] = useState<string | null>(null);
   const { user } = useAuth();
+  
+  // Effect to handle selected questions
+  useEffect(() => {
+    if (selectedQuestion) {
+      // This will be picked up by the SupportChatbot component if it's listening for 'selectedQuestion'
+      const event = new CustomEvent('chatQuestion', { detail: selectedQuestion });
+      window.dispatchEvent(event);
+      setSelectedQuestion(null);
+    }
+  }, [selectedQuestion]);
   
   const handleToggleNotifications = (checked: boolean) => {
     setEmailNotifications(checked);
@@ -22,6 +46,10 @@ const SupportChatPage: React.FC = () => {
         description: `You will no longer receive emails for activities.`
       });
     }
+  };
+  
+  const handleQuestionClick = (question: string) => {
+    setSelectedQuestion(question);
   };
   
   return (
@@ -43,9 +71,33 @@ const SupportChatPage: React.FC = () => {
         </div>
       </div>
       
-      <Card className="h-[calc(100vh-15rem)]">
-        <SupportChatbot />
-      </Card>
+      <div className="flex flex-col lg:flex-row gap-4">
+        <div className="lg:w-3/4">
+          <Card className="h-[calc(100vh-15rem)]">
+            <SupportChatbot />
+          </Card>
+        </div>
+        
+        <div className="lg:w-1/4 space-y-4">
+          <Card>
+            <CardContent className="pt-6">
+              <h3 className="text-lg font-medium mb-3">Common Questions</h3>
+              <div className="space-y-2">
+                {commonQuestions.map((question, index) => (
+                  <Button 
+                    key={index} 
+                    variant="outline" 
+                    className="w-full justify-start text-left h-auto py-2 px-3"
+                    onClick={() => handleQuestionClick(question)}
+                  >
+                    {question}
+                  </Button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
       
       <div className="text-sm text-muted-foreground">
         <p>

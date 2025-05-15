@@ -62,11 +62,9 @@ const LoanApplicationPage: React.FC = () => {
       // Add transaction for application fee
       if (user) {
         await addTransaction({
-          // Remove the 'id' property since it will be added by addTransaction
           amount: 500,
           type: "payment",
           description: "Loan application processing fee"
-          // Remove the 'date' property since it will be added by addTransaction
         });
       }
       
@@ -75,15 +73,8 @@ const LoanApplicationPage: React.FC = () => {
         description: "Your loan application has been submitted successfully.",
       });
       
-      // Force refresh local storage to ensure changes are saved
-      if (user?.email) {
-        const userDataKey = `agriloan_userdata_${user.email}`;
-        const userData = localStorage.getItem(userDataKey);
-        if (userData) {
-          const parsedData = JSON.parse(userData);
-          localStorage.setItem(userDataKey, JSON.stringify(parsedData));
-        }
-      }
+      // Force refresh all relevant data in localStorage
+      refreshAllUserData();
       
       // Navigate back to dashboard
       setTimeout(() => {
@@ -96,6 +87,36 @@ const LoanApplicationPage: React.FC = () => {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+  
+  // Function to refresh all user data in localStorage
+  const refreshAllUserData = () => {
+    // First refresh current user's data
+    if (user?.email) {
+      const userDataKey = `agriloan_userdata_${user.email}`;
+      const userData = localStorage.getItem(userDataKey);
+      if (userData) {
+        const parsedData = JSON.parse(userData);
+        // Make sure the updated data is saved back
+        localStorage.setItem(userDataKey, JSON.stringify(parsedData));
+      }
+    }
+    
+    // Then also refresh all other users' data to ensure admins and verifiers see updates
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('agriloan_userdata_') && (!user?.email || !key.includes(user.email))) {
+        try {
+          const otherUserData = localStorage.getItem(key);
+          if (otherUserData) {
+            const parsedData = JSON.parse(otherUserData);
+            localStorage.setItem(key, JSON.stringify(parsedData));
+          }
+        } catch (error) {
+          console.error("Error refreshing other user data:", error);
+        }
+      }
     }
   };
   

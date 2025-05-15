@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import LoanRepayment from "@/components/loans/LoanRepayment";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,6 +7,17 @@ import CreditScoreBoard from "@/components/dashboard/CreditScoreBoard";
 
 const RepayLoanPage: React.FC = () => {
   const { user } = useAuth();
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  
+  // Force refresh when component mounts
+  useEffect(() => {
+    // Set up a timer to periodically refresh the page data
+    const intervalId = setInterval(() => {
+      setRefreshTrigger(prev => prev + 1);
+    }, 5000); // Refresh every 5 seconds
+    
+    return () => clearInterval(intervalId);
+  }, []);
   
   // Calculate total outstanding loan amount
   const approvedLoans = user?.loans
@@ -23,17 +34,18 @@ const RepayLoanPage: React.FC = () => {
     
     return {
       ...loan,
-      remainingBalance: Math.max(0, loan.amount - repaidForThisLoan)
+      remainingBalance: Math.max(0, loan.amount - repaidForThisLoan),
+      repaidAmount: repaidForThisLoan
     };
   });
   
   // Calculate total approved amount, repaid amount, and outstanding amount
   const totalApprovedAmount = loansWithBalance.reduce((total, loan) => total + loan.amount, 0);
   const outstandingAmount = loansWithBalance.reduce((total, loan) => total + loan.remainingBalance, 0);
-  const repaidAmount = totalApprovedAmount - outstandingAmount;
+  const repaidAmount = loansWithBalance.reduce((total, loan) => total + loan.repaidAmount, 0);
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" key={`repay-page-${refreshTrigger}`}>
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Loan Repayment</h2>
         <p className="text-muted-foreground">
@@ -55,7 +67,7 @@ const RepayLoanPage: React.FC = () => {
               </div>
               <div className="flex justify-between">
                 <dt className="text-sm font-medium text-muted-foreground">Total Repaid</dt>
-                <dd className="text-sm font-semibold">₹{repaidAmount.toLocaleString()}</dd>
+                <dd className="text-sm font-semibold text-green-600">₹{repaidAmount.toLocaleString()}</dd>
               </div>
               <div className="flex justify-between pt-4 border-t">
                 <dt className="text-base font-medium">Outstanding Balance</dt>
@@ -66,10 +78,17 @@ const RepayLoanPage: React.FC = () => {
                 <div className="mt-4 pt-4 border-t">
                   <h4 className="text-sm font-medium mb-2">Individual Loan Balances:</h4>
                   <ul className="space-y-2">
-                    {loansWithBalance.filter(loan => loan.remainingBalance > 0).map(loan => (
+                    {loansWithBalance.map(loan => (
                       <li key={loan.id} className="flex justify-between text-sm">
                         <span>{loan.type}</span>
-                        <span className="font-medium">₹{loan.remainingBalance.toLocaleString()}</span>
+                        <div className="text-right">
+                          <span className="font-medium">₹{loan.remainingBalance.toLocaleString()}</span>
+                          {loan.repaidAmount > 0 && (
+                            <span className="block text-xs text-green-600">
+                              (₹{loan.repaidAmount.toLocaleString()} repaid)
+                            </span>
+                          )}
+                        </div>
                       </li>
                     ))}
                   </ul>

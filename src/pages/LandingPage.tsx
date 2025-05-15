@@ -1,10 +1,21 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CreditCard, Shield, TrendingUp, CheckCircle, ChevronRight } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const LandingPage: React.FC = () => {
+  const [activeDialog, setActiveDialog] = useState<string | null>(null);
+  
+  const openDialog = (dialogType: string) => {
+    setActiveDialog(dialogType);
+  };
+  
+  const closeDialog = () => {
+    setActiveDialog(null);
+  };
+  
   return (
     <div className="flex flex-col min-h-screen">
       {/* Header/Navigation */}
@@ -19,15 +30,24 @@ const LandingPage: React.FC = () => {
               <Link to="/" className="text-gray-900 hover:text-agriloan-primary px-3 py-2 text-sm font-medium">
                 Home
               </Link>
-              <Link to="/" className="text-gray-500 hover:text-agriloan-primary px-3 py-2 text-sm font-medium">
+              <button 
+                onClick={() => openDialog('features')} 
+                className="text-gray-500 hover:text-agriloan-primary px-3 py-2 text-sm font-medium"
+              >
                 Features
-              </Link>
-              <Link to="/" className="text-gray-500 hover:text-agriloan-primary px-3 py-2 text-sm font-medium">
+              </button>
+              <button 
+                onClick={() => openDialog('aboutUs')} 
+                className="text-gray-500 hover:text-agriloan-primary px-3 py-2 text-sm font-medium"
+              >
                 About Us
-              </Link>
-              <Link to="/" className="text-gray-500 hover:text-agriloan-primary px-3 py-2 text-sm font-medium">
+              </button>
+              <button 
+                onClick={() => openDialog('contact')} 
+                className="text-gray-500 hover:text-agriloan-primary px-3 py-2 text-sm font-medium"
+              >
                 Contact
-              </Link>
+              </button>
             </nav>
             <div className="hidden md:flex items-center space-x-4">
               <Link to="/login">
@@ -308,6 +328,102 @@ const LandingPage: React.FC = () => {
           </div>
         </div>
       </footer>
+      
+      {/* Dialogs for Navigation Items */}
+      <Dialog open={activeDialog === 'features'} onOpenChange={() => activeDialog === 'features' && closeDialog()}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Our Features</DialogTitle>
+            <DialogDescription>
+              Discover what makes AgriLoan Nexus the best choice for farmers
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-start gap-4">
+              <div className="bg-agriloan-primary/10 p-3 rounded-full">
+                <CreditCard className="h-6 w-6 text-agriloan-primary" />
+              </div>
+              <div>
+                <h4 className="font-medium">Flexible Credit Solutions</h4>
+                <p className="text-sm text-muted-foreground">Customized credit options that adapt to your farming cycle and cash flow needs.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-4">
+              <div className="bg-agriloan-primary/10 p-3 rounded-full">
+                <Shield className="h-6 w-6 text-agriloan-primary" />
+              </div>
+              <div>
+                <h4 className="font-medium">Fair Interest Rates</h4>
+                <p className="text-sm text-muted-foreground">Transparent pricing with competitive rates, helping you escape high-interest local lenders.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-4">
+              <div className="bg-agriloan-primary/10 p-3 rounded-full">
+                <TrendingUp className="h-6 w-6 text-agriloan-primary" />
+              </div>
+              <div>
+                <h4 className="font-medium">Credit History Building</h4>
+                <p className="text-sm text-muted-foreground">Establish and improve your credit score with each successful repayment.</p>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={activeDialog === 'aboutUs'} onOpenChange={() => activeDialog === 'aboutUs' && closeDialog()}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>About AgriLoan Nexus</DialogTitle>
+            <DialogDescription>
+              Our mission and values
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p>
+              AgriLoan Nexus was founded in 2023 with a clear mission: to provide accessible and fair financial services to rural farmers across India who have traditionally been underserved by the banking sector.
+            </p>
+            <p>
+              Our team combines expertise in finance, agriculture, and technology to create solutions that truly meet the needs of farmers. We believe that financial inclusion is a right, not a privilege.
+            </p>
+            <p>
+              By connecting farmers directly with verified lenders and using advanced credit scoring models that understand agricultural cycles, we're revolutionizing rural finance.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={activeDialog === 'contact'} onOpenChange={() => activeDialog === 'contact' && closeDialog()}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Contact Us</DialogTitle>
+            <DialogDescription>
+              We're here to help with any questions or concerns
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-start gap-4">
+              <div>
+                <h4 className="font-medium">Customer Support</h4>
+                <p className="text-sm">support@agriloan-nexus.com</p>
+                <p className="text-sm">+91 123-456-7890</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-4">
+              <div>
+                <h4 className="font-medium">Partnerships</h4>
+                <p className="text-sm">partners@agriloan-nexus.com</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-4">
+              <div>
+                <h4 className="font-medium">Head Office</h4>
+                <p className="text-sm">Sector 5, Noida, UP, India</p>
+                <p className="text-sm">Hours: Monday-Friday, 9am-5pm IST</p>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
