@@ -23,15 +23,34 @@ const DashboardPage: React.FC = () => {
           const userDataKey = `agriloan_userdata_${user.email}`;
           const storedData = localStorage.getItem(userDataKey);
           if (storedData) {
+            // Parse and re-save data to ensure it's fresh
             const parsedData = JSON.parse(storedData);
+            localStorage.setItem(userDataKey, JSON.stringify(parsedData));
             console.log("User data refreshed for dashboard:", parsedData);
             
             // Show toast notification for new loan applications
             if (parsedData.loans) {
               const pendingLoans = parsedData.loans.filter((loan: any) => loan.status === "pending") || [];
+              const approvedLoans = parsedData.loans.filter((loan: any) => loan.status === "approved") || [];
+              const rejectedLoans = parsedData.loans.filter((loan: any) => loan.status === "rejected") || [];
+              const repaidLoans = parsedData.loans.filter((loan: any) => loan.status === "repaid") || [];
               
               if (pendingLoans.length > 0 && user.role === "farmer") {
                 toast.info(`You have ${pendingLoans.length} pending loan application(s)`);
+              }
+              
+              if (approvedLoans.length > 0 && user.role === "farmer") {
+                toast.success(`You have ${approvedLoans.length} approved loan(s)`);
+              }
+              
+              if (rejectedLoans.length > 0 && user.role === "farmer") {
+                toast.error(`You have ${rejectedLoans.length} rejected loan application(s)`);
+              }
+              
+              if (repaidLoans.length > 0 && user.role === "farmer") {
+                toast(`You have fully repaid ${repaidLoans.length} loan(s)`, {
+                  description: "Great job on paying off your loans!"
+                });
               }
             }
           }

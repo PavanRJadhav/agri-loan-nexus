@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { ArrowRight, Upload, CheckCircle, AlertCircle, HelpCircle } from 'lucide-react';
@@ -16,62 +16,83 @@ interface Document {
   name: string;
   uploaded: boolean;
   required: boolean;
+  file?: File | null;
+  fileName?: string;
 }
 
 const DocumentUploadStep: React.FC<DocumentUploadStepProps> = ({ onComplete, initialData = [] }) => {
+  const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  
   const [documents, setDocuments] = useState<Document[]>([
     { 
       type: 'idProof', 
       name: 'ID Proof (Aadhaar/PAN Card)', 
       uploaded: initialData.some((doc: any) => doc.type === 'idProof') || false,
-      required: true
+      required: true,
+      fileName: initialData.find((doc: any) => doc.type === 'idProof')?.fileName || ''
     },
     { 
       type: 'addressProof', 
       name: 'Address Proof (Ration Card/Utility Bill)', 
       uploaded: initialData.some((doc: any) => doc.type === 'addressProof') || false,
-      required: true
+      required: true,
+      fileName: initialData.find((doc: any) => doc.type === 'addressProof')?.fileName || ''
     },
     { 
       type: 'landRecords', 
       name: 'Land Records/Property Documents', 
       uploaded: initialData.some((doc: any) => doc.type === 'landRecords') || false,
-      required: true
+      required: true,
+      fileName: initialData.find((doc: any) => doc.type === 'landRecords')?.fileName || ''
     },
     { 
       type: 'bankStatements', 
       name: 'Bank Statements (Last 6 months)', 
       uploaded: initialData.some((doc: any) => doc.type === 'bankStatements') || false,
-      required: true
+      required: true,
+      fileName: initialData.find((doc: any) => doc.type === 'bankStatements')?.fileName || ''
     },
     { 
       type: 'incomeProof', 
       name: 'Income Proof/Tax Returns', 
       uploaded: initialData.some((doc: any) => doc.type === 'incomeProof') || false,
-      required: false
+      required: false,
+      fileName: initialData.find((doc: any) => doc.type === 'incomeProof')?.fileName || ''
     },
     { 
       type: 'photographs', 
       name: 'Recent Passport-sized Photographs', 
       uploaded: initialData.some((doc: any) => doc.type === 'photographs') || false,
-      required: true
+      required: true,
+      fileName: initialData.find((doc: any) => doc.type === 'photographs')?.fileName || ''
     }
   ]);
   
   const [errorMessage, setErrorMessage] = useState('');
   
-  const handleUpload = (index: number) => {
-    // Simulate document upload
-    // In a real application, this would handle actual file uploads
-    
-    toast.success("Document uploaded successfully");
+  const handleFileChange = (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
     
     const updatedDocuments = [...documents];
-    updatedDocuments[index].uploaded = true;
-    setDocuments(updatedDocuments);
+    updatedDocuments[index] = {
+      ...updatedDocuments[index],
+      uploaded: true,
+      file,
+      fileName: file.name
+    };
     
-    // Clear any previous error
+    setDocuments(updatedDocuments);
     setErrorMessage('');
+    
+    toast.success(`${file.name} uploaded successfully`, {
+      description: "Your document has been attached to your application"
+    });
+  };
+  
+  const handleUploadClick = (index: number) => {
+    // Trigger the hidden file input
+    fileInputRefs.current[index]?.click();
   };
   
   const validateSubmission = () => {
@@ -91,10 +112,13 @@ const DocumentUploadStep: React.FC<DocumentUploadStepProps> = ({ onComplete, ini
     
     if (validateSubmission()) {
       // Format the data to be passed to the next step
-      const documentsData = documents.filter(doc => doc.uploaded).map(doc => ({
-        type: doc.type,
-        name: doc.name
-      }));
+      const documentsData = documents
+        .filter(doc => doc.uploaded)
+        .map(doc => ({
+          type: doc.type,
+          name: doc.name,
+          fileName: doc.fileName
+        }));
       
       onComplete({ documents: documentsData });
     }
@@ -104,8 +128,8 @@ const DocumentUploadStep: React.FC<DocumentUploadStepProps> = ({ onComplete, ini
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4">
         <p className="text-sm text-yellow-800">
-          <strong>Note:</strong> For demonstration purposes, document uploads are simulated. 
-          In a real application, you would need to upload actual document files.
+          <strong>Note:</strong> For demonstration purposes, uploaded files won't be stored on a server.
+          In a production environment, these would be securely stored.
         </p>
       </div>
       
@@ -117,6 +141,15 @@ const DocumentUploadStep: React.FC<DocumentUploadStepProps> = ({ onComplete, ini
               doc.uploaded ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
             }`}
           >
+            {/* Hidden file input */}
+            <input
+              type="file"
+              ref={el => fileInputRefs.current[index] = el}
+              className="hidden"
+              onChange={(e) => handleFileChange(index, e)}
+              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+            />
+            
             <div className="flex items-center space-x-2">
               {doc.uploaded ? (
                 <CheckCircle className="h-5 w-5 text-green-500" />
@@ -134,6 +167,9 @@ const DocumentUploadStep: React.FC<DocumentUploadStepProps> = ({ onComplete, ini
                   {doc.name}
                   {doc.required && <span className="text-red-500 ml-1">*</span>}
                 </Label>
+                {doc.fileName && (
+                  <p className="text-xs text-green-600">{doc.fileName}</p>
+                )}
                 {!doc.required && (
                   <p className="text-xs text-muted-foreground">Optional</p>
                 )}
@@ -147,15 +183,15 @@ const DocumentUploadStep: React.FC<DocumentUploadStepProps> = ({ onComplete, ini
                     type="button"
                     variant={doc.uploaded ? "outline" : "default"}
                     size="sm"
-                    onClick={() => handleUpload(index)}
+                    onClick={() => handleUploadClick(index)}
                   >
                     <Upload className="mr-2 h-4 w-4" />
-                    {doc.uploaded ? 'Re-upload' : 'Upload'}
+                    {doc.uploaded ? 'Change File' : 'Select File'}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
                   {doc.uploaded 
-                    ? 'Document already uploaded. You can upload a new version if needed.' 
+                    ? 'Document already uploaded. You can upload a new file if needed.' 
                     : `Upload your ${doc.name} file`}
                 </TooltipContent>
               </Tooltip>

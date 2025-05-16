@@ -70,13 +70,20 @@ const LoanApplicationSteps: React.FC = () => {
   }, [user?.preferredLender, navigate]);
 
   useEffect(() => {
+    // Determine current step from URL
+    const currentPath = location.pathname;
+    const stepIndex = steps.findIndex(step => step.path === currentPath);
+    if (stepIndex >= 0) {
+      setCurrentStep(stepIndex);
+    }
+
     // Initialize step data in localStorage if not already there
     const applicationDataKey = `loan_application_${user?.id}`;
     const savedData = localStorage.getItem(applicationDataKey);
     
     if (!savedData) {
       const initialData = {
-        step: 0,
+        step: stepIndex >= 0 ? stepIndex : 0,
         data: {
           farmDetails: {},
           financialDetails: {},
@@ -89,9 +96,16 @@ const LoanApplicationSteps: React.FC = () => {
     } else {
       // Load current step from saved data
       const parsedData = JSON.parse(savedData);
-      setCurrentStep(parsedData.step || 0);
+      if (stepIndex < 0) {
+        // If we're not on a step page, use the saved step
+        setCurrentStep(parsedData.step || 0);
+      } else {
+        // If we are on a step page, update the saved step
+        parsedData.step = stepIndex;
+        localStorage.setItem(applicationDataKey, JSON.stringify(parsedData));
+      }
     }
-  }, [user?.id]);
+  }, [location.pathname, user?.id]);
 
   const handleStepClick = (index: number) => {
     // Don't allow skipping ahead more than one step

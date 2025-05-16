@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,7 @@ interface LoanRepaymentProps {
 const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) => {
   const { user, addTransaction, updateUserData } = useAuth();
   const { toast: uiToast } = useToast();
-  const [amount, setAmount] = useState<string>(defaultAmount ? defaultAmount.toString() : '');
+  const [amount, setAmount] = useState<string>('');
   const [selectedLoanId, setSelectedLoanId] = useState<string>(loanId || '');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
@@ -104,6 +105,17 @@ const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) 
         return;
       }
       
+      // Verify that the user has enough balance
+      if (numericAmount > (user?.financialData?.currentBalance || 0)) {
+        uiToast({
+          title: "Insufficient funds",
+          description: `You don't have enough balance to make this payment.`,
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
       // Add repayment transaction
       await addTransaction({
         amount: numericAmount,
@@ -127,12 +139,17 @@ const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) 
             // Use optional chaining for properties that might not exist on loan type
             const prevPaymentsMade = loan.paymentsMade || 0;
             const prevAmountRepaid = loan.amountRepaid || 0;
+            const totalRepaid = prevAmountRepaid + numericAmount;
+            
+            // Check if loan is fully repaid and update status if it is
+            const isFullyRepaid = totalRepaid >= loan.amount;
             
             return {
               ...loan,
               // Add these properties if they don't exist in the LoanApplication type
               paymentsMade: prevPaymentsMade + 1,
-              amountRepaid: prevAmountRepaid + numericAmount
+              amountRepaid: totalRepaid,
+              status: isFullyRepaid ? "repaid" : loan.status
             };
           }
           return loan;
@@ -148,9 +165,9 @@ const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) 
       });
       
       // Display additional notification if loan is fully repaid
-      if (numericAmount >= selectedLoan.remainingBalance) {
+      if (selectedLoan && numericAmount >= selectedLoan.remainingBalance) {
         // Fix: Use the correct sonner toast API
-        toast("Loan fully repaid!", {
+        toast.success("Loan fully repaid!", {
           description: "Congratulations! You have fully repaid this loan."
         });
       }
@@ -245,6 +262,11 @@ const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) 
                 onChange={(e) => setAmount(e.target.value)}
                 max={selectedLoanId ? loansWithBalance.find(loan => loan.id === selectedLoanId)?.remainingBalance : undefined}
               />
+              {selectedLoanId && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Maximum: ₹{loansWithBalance.find(loan => loan.id === selectedLoanId)?.remainingBalance.toLocaleString() || 0}
+                </p>
+              )}
             </div>
             
             <div className="bg-gray-50 p-3 rounded-md">
@@ -276,7 +298,7 @@ const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) 
         <Button 
           className="w-full" 
           onClick={handleRepayLoan} 
-          disabled={isSubmitting || loansWithBalance.length === 0}
+          disabled={isSubmitting || loansWithBalance.length === 0 || !amount}
         >
           {isSubmitting ? "Processing..." : "Make Payment"}
         </Button>
