@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,23 @@ import { toast } from "sonner";
 interface LoanRepaymentProps {
   loanId?: string;
   defaultAmount?: number;
+}
+
+interface LoanWithBalance extends LoanApplication {
+  remainingBalance: number;
+  repaidAmount: number;
+  paymentsMade?: number;
+  amountRepaid?: number;
+}
+
+// Define a type that includes 'repaid' as a valid status
+type ExtendedLoanStatus = "pending" | "approved" | "rejected" | "repaid";
+
+// Create an extended loan type that includes the additional status
+interface ExtendedLoanApplication extends Omit<LoanApplication, 'status'> {
+  status: ExtendedLoanStatus;
+  paymentsMade?: number;
+  amountRepaid?: number;
 }
 
 const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) => {
@@ -136,7 +152,6 @@ const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) 
       if (user?.loans) {
         const updatedLoans = user.loans.map(loan => {
           if (loan.id === selectedLoanId) {
-            // Use optional chaining for properties that might not exist on loan type
             const prevPaymentsMade = loan.paymentsMade || 0;
             const prevAmountRepaid = loan.amountRepaid || 0;
             const totalRepaid = prevAmountRepaid + numericAmount;
@@ -144,18 +159,19 @@ const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) 
             // Check if loan is fully repaid and update status if it is
             const isFullyRepaid = totalRepaid >= loan.amount;
             
+            // We need to cast the loan to ExtendedLoanApplication because we need to use 'repaid' status
             return {
               ...loan,
-              // Add these properties if they don't exist in the LoanApplication type
               paymentsMade: prevPaymentsMade + 1,
               amountRepaid: totalRepaid,
-              status: isFullyRepaid ? "repaid" : loan.status
-            };
+              status: isFullyRepaid ? "repaid" as ExtendedLoanStatus : loan.status
+            } as ExtendedLoanApplication;
           }
           return loan;
-        });
+        }) as ExtendedLoanApplication[];
         
-        await updateUserData({ loans: updatedLoans });
+        // Cast the updated loans back to the format expected by updateUserData
+        await updateUserData({ loans: updatedLoans as any });
       }
       
       // Update UI with toast
@@ -166,7 +182,6 @@ const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) 
       
       // Display additional notification if loan is fully repaid
       if (selectedLoan && numericAmount >= selectedLoan.remainingBalance) {
-        // Fix: Use the correct sonner toast API
         toast.success("Loan fully repaid!", {
           description: "Congratulations! You have fully repaid this loan."
         });
