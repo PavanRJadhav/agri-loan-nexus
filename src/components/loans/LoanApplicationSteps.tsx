@@ -103,18 +103,6 @@ const LoanApplicationSteps: React.FC = () => {
     navigate(steps[index].path);
   };
 
-  const saveCurrentStep = (step: number) => {
-    const applicationDataKey = `loan_application_${user?.id}`;
-    const savedData = localStorage.getItem(applicationDataKey);
-    
-    if (savedData) {
-      const parsedData = JSON.parse(savedData);
-      parsedData.step = step;
-      parsedData.lastUpdated = new Date().toISOString();
-      localStorage.setItem(applicationDataKey, JSON.stringify(parsedData));
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div>

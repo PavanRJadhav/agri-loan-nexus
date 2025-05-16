@@ -28,11 +28,7 @@ import LendingPartnersPage from "./pages/LendingPartnersPage";
 import LenderSelection from "./components/loans/LenderSelection";
 import RepayLoanPage from "./pages/RepayLoanPage";
 import LoanApplicationSteps from "./components/loans/LoanApplicationSteps";
-import FarmDetailsStep from "./components/loans/steps/FarmDetailsStep";
-import FinancialDetailsStep from "./components/loans/steps/FinancialDetailsStep";
-import DocumentUploadStep from "./components/loans/steps/DocumentUploadStep";
-import BankingInfoStep from "./components/loans/steps/BankingInfoStep";
-import ReviewSubmitStep from "./components/loans/steps/ReviewSubmitStep";
+import LoanApplicationContainer from "./components/loans/LoanApplicationContainer";
 
 // Create a new QueryClient instance inside the component
 function App() {
@@ -66,11 +62,12 @@ function App() {
                 <Route index element={<Navigate to="/dashboard" replace />} />
                 <Route path="new" element={<LoanApplicationSteps />} />
                 <Route path="old" element={<LoanApplicationPage />} />
-                <Route path="farm-details" element={<FarmDetailsStep />} />
-                <Route path="financial-details" element={<FinancialDetailsStep />} />
-                <Route path="document-upload" element={<DocumentUploadStep />} />
-                <Route path="banking-info" element={<BankingInfoStep />} />
-                <Route path="review" element={<ReviewSubmitStep />} />
+                {/* Use our container component for all step routes */}
+                <Route path="farm-details" element={<LoanApplicationContainer />} />
+                <Route path="financial-details" element={<LoanApplicationContainer />} />
+                <Route path="document-upload" element={<LoanApplicationContainer />} />
+                <Route path="banking-info" element={<LoanApplicationContainer />} />
+                <Route path="review" element={<LoanApplicationContainer />} />
               </Route>
               
               <Route path="/credit-cards" element={<MainLayout requiredRole="farmer" />}>
