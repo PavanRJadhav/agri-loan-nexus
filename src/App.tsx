@@ -27,6 +27,12 @@ import AnalyticsPage from "./pages/AnalyticsPage";
 import LendingPartnersPage from "./pages/LendingPartnersPage";
 import LenderSelection from "./components/loans/LenderSelection";
 import RepayLoanPage from "./pages/RepayLoanPage";
+import LoanApplicationSteps from "./components/loans/LoanApplicationSteps";
+import FarmDetailsStep from "./components/loans/steps/FarmDetailsStep";
+import FinancialDetailsStep from "./components/loans/steps/FinancialDetailsStep";
+import DocumentUploadStep from "./components/loans/steps/DocumentUploadStep";
+import BankingInfoStep from "./components/loans/steps/BankingInfoStep";
+import ReviewSubmitStep from "./components/loans/steps/ReviewSubmitStep";
 
 // Create a new QueryClient instance inside the component
 function App() {
@@ -58,7 +64,13 @@ function App() {
               {/* Protected farmer routes */}
               <Route path="/loan-applications" element={<MainLayout requiredRole="farmer" />}>
                 <Route index element={<Navigate to="/dashboard" replace />} />
-                <Route path="new" element={<LoanApplicationPage />} />
+                <Route path="new" element={<LoanApplicationSteps />} />
+                <Route path="old" element={<LoanApplicationPage />} />
+                <Route path="farm-details" element={<FarmDetailsStep />} />
+                <Route path="financial-details" element={<FinancialDetailsStep />} />
+                <Route path="document-upload" element={<DocumentUploadStep />} />
+                <Route path="banking-info" element={<BankingInfoStep />} />
+                <Route path="review" element={<ReviewSubmitStep />} />
               </Route>
               
               <Route path="/credit-cards" element={<MainLayout requiredRole="farmer" />}>

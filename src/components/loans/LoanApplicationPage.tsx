@@ -44,7 +44,10 @@ const LoanApplicationPage: React.FC = () => {
         status: "pending",
         submittedAt: new Date().toISOString(),
         paymentsMade: 0,
-        amountRepaid: 0
+        amountRepaid: 0,
+        tenure: data.tenure || 12,
+        hasCollateral: data.hasCollateral || false,
+        collateralDescription: data.collateralDescription || ""
       };
       
       // Add application to user's loans
@@ -73,7 +76,7 @@ const LoanApplicationPage: React.FC = () => {
         description: "Your loan application has been submitted successfully.",
       });
       
-      // Force refresh all relevant data in localStorage
+      // Force refresh all relevant data in localStorage - CRITICAL FIX for data visibility
       refreshAllUserData();
       
       // Navigate back to dashboard
@@ -92,14 +95,22 @@ const LoanApplicationPage: React.FC = () => {
   
   // Function to refresh all user data in localStorage
   const refreshAllUserData = () => {
+    console.log("Refreshing ALL user data for application visibility");
+    
     // First refresh current user's data
     if (user?.email) {
       const userDataKey = `agriloan_userdata_${user.email}`;
-      const userData = localStorage.getItem(userDataKey);
-      if (userData) {
-        const parsedData = JSON.parse(userData);
-        // Make sure the updated data is saved back
-        localStorage.setItem(userDataKey, JSON.stringify(parsedData));
+      try {
+        const userData = localStorage.getItem(userDataKey);
+        if (userData) {
+          const parsedData = JSON.parse(userData);
+          // Make sure the updated data is saved back with a fresh timestamp
+          parsedData.lastRefresh = new Date().toISOString();
+          localStorage.setItem(userDataKey, JSON.stringify(parsedData));
+          console.log("Refreshed current user's data:", user.email);
+        }
+      } catch (error) {
+        console.error("Error refreshing user data:", error);
       }
     }
     
@@ -111,13 +122,20 @@ const LoanApplicationPage: React.FC = () => {
           const otherUserData = localStorage.getItem(key);
           if (otherUserData) {
             const parsedData = JSON.parse(otherUserData);
+            // Add a refresh timestamp to force data reload
+            parsedData.lastRefresh = new Date().toISOString();
             localStorage.setItem(key, JSON.stringify(parsedData));
+            console.log("Refreshed data for:", key);
           }
         } catch (error) {
           console.error("Error refreshing other user data:", error);
         }
       }
     }
+    
+    // Force a global refresh indicator to localStorage to trigger dashboard updates
+    localStorage.setItem('agriloan_global_refresh', Date.now().toString());
+    console.log("Global refresh indicator updated");
   };
   
   if (!user?.preferredLender) {

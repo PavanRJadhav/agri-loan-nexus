@@ -14,7 +14,6 @@ const DashboardPage: React.FC = () => {
   
   // Force refresh when the component mounts to ensure latest data
   useEffect(() => {
-    // Add console logs to debug dashboard rendering
     console.log("Dashboard refreshed, current user role:", user?.role);
     
     // Retrieve fresh data from localStorage for the current user
@@ -44,19 +43,18 @@ const DashboardPage: React.FC = () => {
     
     refreshUserData();
     
-    // Set a refresh interval to check for updates every 5 seconds (more frequent than before)
+    // Set a refresh interval to check for updates every 3 seconds (more frequent than before)
     const intervalId = setInterval(() => {
       setRefreshTrigger(prev => prev + 1);
       refreshUserData();
-    }, 5000);
+    }, 3000);
     
     // Clear interval on component unmount
     return () => clearInterval(intervalId);
   }, [user]);
 
-  // Enhanced refresh mechanism for ALL user roles
+  // Enhanced refresh mechanism - fixed to ensure ALL users' data is fresh across dashboards
   useEffect(() => {
-    // This will run for all roles to ensure consistent data refresh
     const refreshAllDataInLocalStorage = () => {
       console.log(`Refreshing all data for ${user?.role} dashboard...`);
       
@@ -65,16 +63,18 @@ const DashboardPage: React.FC = () => {
         const key = localStorage.key(i);
         if (key && key.startsWith('agriloan_userdata_')) {
           try {
-            const userData = JSON.parse(localStorage.getItem(key) || "{}");
+            // Force a completely fresh read of the data
+            const rawData = localStorage.getItem(key) || "{}";
+            const userData = JSON.parse(rawData);
             
-            // Force a re-read of the data
             if (userData) {
-              // Write it back to ensure it's fresh
+              // Write it back to ensure it's fresh - THIS IS CRUCIAL FOR DATA SYNC
               localStorage.setItem(key, JSON.stringify(userData));
               
-              // Log data details for debugging
+              // Log data details for verification
               if (userData.loans && userData.loans.length > 0) {
                 console.log(`Refreshed ${userData.loans.length} loans for ${key.replace('agriloan_userdata_', '')}`);
+                console.log(`Loan statuses: ${userData.loans.map((l: any) => l.status).join(', ')}`);
               }
             }
           } catch (error) {
@@ -87,11 +87,22 @@ const DashboardPage: React.FC = () => {
     // Execute refresh immediately
     refreshAllDataInLocalStorage();
     
+    // Add a specific refresh interval just for admin and verifier dashboards
+    let intervalId: number | undefined;
+    if (user?.role === "admin" || user?.role === "verifier") {
+      intervalId = window.setInterval(() => {
+        refreshAllDataInLocalStorage();
+      }, 2000);
+    }
+    
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [refreshTrigger, user?.role]);
 
   return (
     // Add key with refresh trigger to force component re-rendering when data changes
-    <div key={`dashboard-${user?.id}-${refreshTrigger}-${Date.now()}`}>
+    <div key={`dashboard-${user?.id}-${refreshTrigger}-${Date.now()}`} className="dashboard-container">
       {user?.role === "farmer" && <FarmerDashboard userName={user.name || "Farmer"} refreshKey={refreshTrigger} />}
       {user?.role === "admin" && <AdminDashboard key={`admin-${refreshTrigger}-${Date.now()}`} />}
       {user?.role === "verifier" && <VerifierDashboard key={`verifier-${refreshTrigger}-${Date.now()}`} />}

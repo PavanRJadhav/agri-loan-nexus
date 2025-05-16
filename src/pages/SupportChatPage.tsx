@@ -1,39 +1,71 @@
 
-import React, { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import SupportChatbot from "@/components/support/SupportChatbot";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { HelpCircle } from "lucide-react";
+import { HelpCircle, ChevronRight, MessageCircle, Tractor, Sprout, CreditCard, FileText } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Define categories of support questions
+// Define categories of support questions with more agricultural context
 const supportCategories = [
   {
+    id: "loan",
     title: "Loan Application",
-    questions: ["How do I apply for a loan?", "What documents are required?", "What are the eligibility criteria?"]
+    icon: FileText,
+    questions: [
+      "How do I apply for a crop loan?", 
+      "What documents are required for loan application?", 
+      "What are the eligibility criteria for farmers?",
+      "How long does loan approval take?",
+      "Can I apply for multiple loans?"
+    ]
   },
   {
+    id: "repayment",
     title: "Loan Management",
-    questions: ["How can I check my loan status?", "How do I repay my loan?", "What if I miss a payment?"]
+    icon: CreditCard,
+    questions: [
+      "How can I check my loan status?", 
+      "What is the procedure to repay my loan?", 
+      "What happens if I miss a payment?",
+      "Can I make partial loan repayments?",
+      "Are there prepayment penalties?"
+    ]
   },
   {
+    id: "finance",
     title: "Financial Information",
-    questions: ["What are the interest rates?", "How is my credit score calculated?", "What types of loans are available?"]
+    icon: Sprout,
+    questions: [
+      "What are the current interest rates for agricultural loans?", 
+      "How is my credit score calculated?", 
+      "What types of farm loans are available?",
+      "Are there any seasonal loan options?",
+      "What subsidies are available for organic farming?"
+    ]
   },
   {
+    id: "support",
     title: "Support & Services",
-    questions: ["How do I contact support?", "Are there any subsidy schemes?", "Do you offer crop insurance?"]
+    icon: Tractor,
+    questions: [
+      "How do I contact customer support?", 
+      "What government subsidy schemes can I access?", 
+      "Do you offer crop insurance with loans?",
+      "Are there field officers who can visit my farm?",
+      "How can I update my farming profile?"
+    ]
   }
 ];
 
 const SupportChatPage: React.FC = () => {
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [selectedQuestion, setSelectedQuestion] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("loan");
   const { user } = useAuth();
-  
-  // Effect to handle selected questions is now handled within the SupportChatbot component
   
   const handleToggleNotifications = (checked: boolean) => {
     setEmailNotifications(checked);
@@ -50,10 +82,19 @@ const SupportChatPage: React.FC = () => {
   };
   
   const handleQuestionClick = (question: string) => {
+    setSelectedQuestion(question);
     // Create a custom event for the chatbot to listen to
     const event = new CustomEvent('chatQuestion', { detail: question });
     window.dispatchEvent(event);
+    
+    // Also show toast to confirm selection
+    toast.info("Question selected", {
+      description: "Your question has been sent to the virtual assistant."
+    });
   };
+  
+  // Find the active category based on the active tab
+  const activeCategory = supportCategories.find(cat => cat.id === activeTab) || supportCategories[0];
   
   return (
     <div className="space-y-6">
@@ -74,38 +115,73 @@ const SupportChatPage: React.FC = () => {
         </div>
       </div>
       
-      <div className="flex flex-col lg:flex-row gap-4">
+      <div className="flex flex-col lg:flex-row gap-6">
         <div className="lg:w-3/4">
           <Card className="h-[calc(100vh-15rem)]">
-            <SupportChatbot />
+            <SupportChatbot selectedQuestion={selectedQuestion} />
           </Card>
         </div>
         
         <div className="lg:w-1/4 space-y-4">
           <Card>
-            <CardContent className="pt-6">
-              <h3 className="text-lg font-medium mb-3">Popular Topics</h3>
-              
-              {supportCategories.map((category, index) => (
-                <div key={index} className="mb-4">
-                  <h4 className="text-sm font-medium flex items-center mb-2">
-                    <HelpCircle className="h-4 w-4 mr-1 text-primary" />
-                    {category.title}
-                  </h4>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center">
+                <MessageCircle className="mr-2 h-5 w-5 text-primary" />
+                Common Questions
+              </CardTitle>
+              <CardDescription>
+                Select a category to find answers to common questions
+              </CardDescription>
+            </CardHeader>
+            
+            <CardContent>
+              <Tabs defaultValue="loan" value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid grid-cols-4">
+                  {supportCategories.map(category => (
+                    <TabsTrigger key={category.id} value={category.id} className="text-xs">
+                      <category.icon className="h-4 w-4" />
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+                
+                <div className="mt-4">
+                  <h3 className="text-md font-medium mb-2 flex items-center">
+                    <activeCategory.icon className="h-4 w-4 mr-2 text-primary" />
+                    {activeCategory.title}
+                  </h3>
+                  
                   <div className="space-y-2">
-                    {category.questions.map((question, qIndex) => (
+                    {activeCategory.questions.map((question, idx) => (
                       <Button 
-                        key={qIndex} 
-                        variant="outline" 
-                        className="w-full justify-start text-left h-auto py-2 px-3 text-sm"
+                        key={idx}
+                        variant="outline"
+                        className="w-full justify-between text-left h-auto py-3 px-3 text-sm hover:bg-gray-50"
                         onClick={() => handleQuestionClick(question)}
                       >
-                        {question}
+                        <span>{question}</span>
+                        <ChevronRight className="h-4 w-4 text-gray-400" />
                       </Button>
                     ))}
                   </div>
                 </div>
-              ))}
+              </Tabs>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center">
+                <HelpCircle className="h-4 w-4 mr-2 text-primary" />
+                Need More Help?
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-3">
+                Can't find what you're looking for? Contact our support team.
+              </p>
+              <Button variant="outline" className="w-full">
+                Contact Support
+              </Button>
             </CardContent>
           </Card>
         </div>
