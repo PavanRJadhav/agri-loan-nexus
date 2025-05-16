@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import FarmerDashboard from "@/components/dashboard/FarmerDashboard";
@@ -5,6 +6,7 @@ import AdminDashboard from "@/components/dashboard/AdminDashboard";
 import VerifierDashboard from "@/components/dashboard/VerifierDashboard";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
+import { LoanStatus } from "@/types/loans";
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();

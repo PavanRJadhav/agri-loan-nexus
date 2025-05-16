@@ -6,25 +6,18 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { LoanApplication, LoanStatus, LoanWithBalance } from "@/types/loans";
 
 interface LoanRepaymentProps {
   loanId?: string;
   defaultAmount?: number;
 }
 
-interface LoanWithBalance extends LoanApplication {
-  remainingBalance: number;
-  repaidAmount: number;
-  paymentsMade?: number;
-  amountRepaid?: number;
-}
-
 // Define a type that includes 'repaid' as a valid status
-type ExtendedLoanStatus = "pending" | "approved" | "rejected" | "repaid";
+type ExtendedLoanStatus = LoanStatus;
 
 // Create an extended loan type that includes the additional status
-interface ExtendedLoanApplication extends Omit<LoanApplication, 'status'> {
-  status: ExtendedLoanStatus;
+interface ExtendedLoanApplication extends LoanApplication {
   paymentsMade?: number;
   amountRepaid?: number;
 }
