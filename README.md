@@ -78,7 +78,8 @@ Agri-Loan-Nexus/
     └── package.json
 ```
 
-#⚙️ Setup Instructions  
+⚙️ Setup Instructions  
+```
 # Clone the repository
 git clone https://github.com/PavanRJadhav/agri-loan-nexus.git
 
@@ -94,6 +95,7 @@ npm run start   # or: npm run dev (with nodemon)
 cd ../client
 npm install
 npm run dev
+```
 
 🔐 Environment Variables
 PORT=5000
@@ -104,12 +106,6 @@ UPI_API_KEY=your_upi_key
 JWT_SECRET=your_secret
 
 ---
-
-👉 Now only the **folder tree**, **commands**, and **env variables** are in code blocks.  
-Headings (`## 📂 Project Structure`, `## ⚙️ Setup Instructions`, etc.) will render as normal text — not comments.  
-
-Do you want me to take your **entire README** and clean all sections this way so nothing looks like a “comment block” on GitHub?
-
 
 ### Client  
 Handled via Vite environment variables.  
