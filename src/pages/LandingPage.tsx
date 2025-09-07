@@ -1,12 +1,23 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreditCard, Shield, TrendingUp, CheckCircle, ChevronRight } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 const LandingPage: React.FC = () => {
   const [activeDialog, setActiveDialog] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [eligibilityData, setEligibilityData] = useState({
+    landSize: '',
+    annualIncome: '',
+    farmingExperience: '',
+    previousLoans: ''
+  });
   
   const openDialog = (dialogType: string) => {
     setActiveDialog(dialogType);
@@ -14,6 +25,34 @@ const LandingPage: React.FC = () => {
   
   const closeDialog = () => {
     setActiveDialog(null);
+  };
+  
+  const checkEligibility = () => {
+    const landSize = parseFloat(eligibilityData.landSize);
+    const annualIncome = parseFloat(eligibilityData.annualIncome);
+    const farmingExperience = parseFloat(eligibilityData.farmingExperience);
+    const hasPreviousLoans = eligibilityData.previousLoans === 'yes';
+
+    // Basic eligibility criteria
+    const isEligible = 
+      landSize >= 1 && // At least 1 acre
+      annualIncome >= 100000 && // At least ₹1,00,000 annual income
+      farmingExperience >= 2 && // At least 2 years of experience
+      !hasPreviousLoans; // No previous loans
+
+    if (isEligible) {
+      toast({
+        title: "You are eligible!",
+        description: "Redirecting you to the login page...",
+      });
+      navigate('/login');
+    } else {
+      toast({
+        title: "Not eligible",
+        description: "Based on our criteria, you are not eligible for a loan at this time.",
+        variant: "destructive"
+      });
+    }
   };
   
   return (
@@ -69,37 +108,120 @@ const LandingPage: React.FC = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="agriloan-gradient text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-24">
-          <div className="grid md:grid-cols-2 gap-8 items-center">
-            <div className="space-y-6">
-              <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-                Financial Inclusion for Rural Farmers
-              </h1>
-              <p className="text-lg md:text-xl opacity-90">
-                AgriLoan Nexus provides accessible credit solutions for farmers, bypassing traditional barriers and high-interest local lenders.
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <Link to="/register">
-                  <Button size="lg" className="bg-white text-agriloan-primary hover:bg-gray-100">
-                    Get Started
-                  </Button>
-                </Link>
-                <Link to="/about">
-                  <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-                    Learn More
-                  </Button>
-                </Link>
-              </div>
-            </div>
-            <div className="hidden md:block">
-              <img 
-                src="https://placehold.co/600x400/2E7D32/FFFFFF/png?text=Rural+Credit+Access" 
-                alt="Farmer with credit card" 
-                className="rounded-lg shadow-xl"
-              />
-            </div>
+      <section className="relative py-20 overflow-hidden">
+        <div className="absolute inset-0">
+          <img
+            src="/images/farming-hero.jpg"
+            alt="Modern farming landscape"
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.currentTarget.src = "https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2232&q=80";
+            }}
+          />
+          <div className="absolute inset-0 bg-black/50" />
+        </div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
+            Empowering Farmers with Smart Credit Solutions
+          </h1>
+          <p className="text-xl text-white/90 mb-8 max-w-3xl mx-auto">
+            Access affordable loans, manage your farm finances, and grow your agricultural business with our digital platform
+          </p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link to="/register">
+              <Button size="lg" className="bg-white text-agriloan-primary hover:bg-gray-100">
+                Get Started
+              </Button>
+            </Link>
+            <Link to="/login">
+              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+                Sign In
+              </Button>
+            </Link>
           </div>
+        </div>
+      </section>
+
+      {/* Eligibility Check Section */}
+      <section className="py-16 px-4 bg-gray-50">
+        <div className="max-w-4xl mx-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle>Check Your Eligibility</CardTitle>
+              <CardDescription>
+                Find out if you qualify for our agricultural loans
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="landSize" className="text-sm font-medium block mb-1">
+                    Land Size (acres)
+                  </label>
+                  <Input
+                    id="landSize"
+                    type="number"
+                    placeholder="Enter your land size"
+                    value={eligibilityData.landSize}
+                    onChange={(e) => setEligibilityData(prev => ({ ...prev, landSize: e.target.value }))}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="annualIncome" className="text-sm font-medium block mb-1">
+                    Annual Income (₹)
+                  </label>
+                  <Input
+                    id="annualIncome"
+                    type="number"
+                    placeholder="Enter your annual income"
+                    value={eligibilityData.annualIncome}
+                    onChange={(e) => setEligibilityData(prev => ({ ...prev, annualIncome: e.target.value }))}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="farmingExperience" className="text-sm font-medium block mb-1">
+                    Farming Experience (years)
+                  </label>
+                  <Input
+                    id="farmingExperience"
+                    type="number"
+                    placeholder="Enter your farming experience"
+                    value={eligibilityData.farmingExperience}
+                    onChange={(e) => setEligibilityData(prev => ({ ...prev, farmingExperience: e.target.value }))}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="previousLoans" className="text-sm font-medium block mb-1">
+                    Previous Loans
+                  </label>
+                  <Select
+                    value={eligibilityData.previousLoans}
+                    onValueChange={(value) => setEligibilityData(prev => ({ ...prev, previousLoans: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select an option" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="no">No previous loans</SelectItem>
+                      <SelectItem value="yes">Has previous loans</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Button 
+                  className="w-full" 
+                  onClick={checkEligibility}
+                  disabled={!eligibilityData.landSize || !eligibilityData.annualIncome || 
+                           !eligibilityData.farmingExperience || !eligibilityData.previousLoans}
+                >
+                  Check Eligibility
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </section>
 

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { sendEmailNotification, getNotificationTemplates } from "@/services/NotificationService";
+import { LoanApplication, Transaction, LoanStatus } from "@/types/loans";
 
 export type UserRole = "farmer" | "admin" | "verifier";
 
@@ -8,25 +9,6 @@ export interface UserFinancialData {
   loanAmount: number;
   incomeSource: string;
   farmSize: string;
-}
-
-export interface LoanApplication {
-  id: string;
-  type: string;
-  amount: number;
-  purpose: string;
-  status: "pending" | "approved" | "rejected";
-  submittedAt: string;
-  paymentsMade?: number;
-  amountRepaid?: number;
-}
-
-export interface Transaction {
-  id: string;
-  amount: number;
-  type: "deposit" | "withdrawal" | "payment" | "disbursement";
-  description: string;
-  date: string;
 }
 
 export interface PreferredLender {

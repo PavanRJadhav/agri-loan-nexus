@@ -1,14 +1,13 @@
-
 /**
  * Credit Scoring Algorithm implementation based on AgriCred methodology
  */
 
 // Parameters and their weights
 const DEFAULT_WEIGHTS = {
-  landholding: 0.25,   // w1
-  cropYield: 0.25,     // w2
-  repaymentRecord: 0.3, // w3
-  inputDemand: 0.2,    // w4
+  landholding: 0.25,   // w1 - Landholding size
+  cropYield: 0.25,     // w2 - Historical crop yield
+  repaymentRecord: 0.3, // w3 - Repayment history
+  inputDemand: 0.2,    // w4 - Input demand index
   bias: -2.5           // b - bias term
 };
 
@@ -41,12 +40,6 @@ export const calculateCWS = (data: FarmerCreditData, weights = DEFAULT_WEIGHTS):
   return sigmoid(z);
 };
 
-// Calculate Credit Limit based on CWS
-export const calculateCreditLimit = (cws: number, baseCreditLimit: number = 50000): number => {
-  // Scale credit limit based on CWS
-  return Math.round(cws * baseCreditLimit * 2); // Maximum of 2x base credit limit
-};
-
 // Calculate Risk Score (RS)
 export const calculateRiskScore = (
   data: FarmerCreditData, 
@@ -62,33 +55,26 @@ export const calculateRiskScore = (
   return missedRatio + (penaltyFactor * lateRatio);
 };
 
-// Calculate Subsidy Savings
-export interface SubsidyTransaction {
-  amount: number;
-  subsidyRate: number;
-}
-
-export const calculateSubsidySavings = (transactions: SubsidyTransaction[]): number => {
-  return transactions.reduce((total, transaction) => {
-    return total + (transaction.amount * transaction.subsidyRate);
-  }, 0);
+// Calculate Credit Limit based on credit score
+export const calculateCreditLimit = (creditScore: number): number => {
+  const baseLimit = 50000; // Base credit limit of ₹50,000
+  const multiplier = creditScore * 10; // Scale up to 10x for perfect scores
+  return Math.round(baseLimit * multiplier);
 };
 
-// Credit score categories
-export const getCreditScoreCategory = (cws: number): string => {
-  if (cws >= 0.9) return "Excellent";
-  if (cws >= 0.8) return "Very Good";
-  if (cws >= 0.6) return "Good";
-  if (cws >= 0.4) return "Fair";
+// Get credit score category
+export const getCreditScoreCategory = (score: number): string => {
+  if (score >= 0.8) return "Excellent";
+  if (score >= 0.6) return "Good";
+  if (score >= 0.4) return "Fair";
   return "Poor";
 };
 
-// Color for credit score visualization
-export const getCreditScoreColor = (cws: number): string => {
-  if (cws >= 0.9) return "bg-green-500";
-  if (cws >= 0.8) return "bg-green-400";
-  if (cws >= 0.6) return "bg-yellow-400";
-  if (cws >= 0.4) return "bg-orange-400";
+// Get color for credit score display
+export const getCreditScoreColor = (score: number): string => {
+  if (score >= 0.8) return "bg-green-500";
+  if (score >= 0.6) return "bg-blue-500";
+  if (score >= 0.4) return "bg-yellow-500";
   return "bg-red-500";
 };
 
@@ -99,21 +85,22 @@ export const generateMockCreditData = (userData: any): FarmerCreditData => {
   const approvedLoanCount = userData?.loans?.filter((loan: any) => loan.status === 'approved').length || 0;
   const rejectedLoanCount = userData?.loans?.filter((loan: any) => loan.status === 'rejected').length || 0;
   
-  // Base repayment record on the ratio of approved to total loans
-  const repaymentRecord = loanCount > 0 
-    ? 5 + (5 * (approvedLoanCount / loanCount))
-    : 5; // Default to middle value if no loans
-  
-  // More loans generally means more land to farm
-  const landholding = 2 + (loanCount * 0.5);
-  
-  // Random but realistic values for other metrics
-  const cropYield = 5 + (Math.random() * 5);
-  const inputDemand = 4 + (Math.random() * 6);
-  
-  // Payment history based on transaction history
+  // Calculate repayment record based on payment history
   const totalPayments = userData?.transactions?.filter((t: any) => t.type === 'payment').length || 0;
   const latePayments = Math.floor(totalPayments * (rejectedLoanCount > 0 ? 0.3 : 0.1));
+  const repaymentRecord = totalPayments > 0 
+    ? 5 + (5 * (1 - (latePayments / totalPayments)))
+    : 5; // Default to middle value if no payments
+  
+  // Calculate landholding based on farm size
+  const landholding = userData?.financialData?.farmSize || 2;
+  
+  // Calculate crop yield based on transaction history and loan success
+  const cropYield = 5 + (approvedLoanCount * 0.5) + (Math.random() * 2);
+  
+  // Calculate input demand based on loan frequency and amounts
+  const totalLoanAmount = userData?.loans?.reduce((sum: number, loan: any) => sum + loan.amount, 0) || 0;
+  const inputDemand = 4 + (Math.min(totalLoanAmount / 100000, 6)); // Scale up to 10 based on total loan amount
   
   return {
     landholding,
@@ -127,9 +114,8 @@ export const generateMockCreditData = (userData: any): FarmerCreditData => {
   };
 };
 
-// Calculate overall score and recommendations
 export interface CreditAssessment {
-  creditScore: number; // 0-1 scale
+  creditScore: number;
   creditLimit: number;
   category: string;
   riskScore: number;

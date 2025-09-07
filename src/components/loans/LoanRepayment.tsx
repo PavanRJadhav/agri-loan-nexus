@@ -6,20 +6,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { LoanApplication, LoanStatus, LoanWithBalance } from "@/types/loans";
+import { LoanApplication, LoanStatus } from "@/types/loans";
 
 interface LoanRepaymentProps {
   loanId?: string;
   defaultAmount?: number;
-}
-
-// Define a type that includes 'repaid' as a valid status
-type ExtendedLoanStatus = LoanStatus;
-
-// Create an extended loan type that includes the additional status
-interface ExtendedLoanApplication extends LoanApplication {
-  paymentsMade?: number;
-  amountRepaid?: number;
 }
 
 const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) => {
@@ -28,7 +19,6 @@ const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) 
   const [amount, setAmount] = useState<string>('');
   const [selectedLoanId, setSelectedLoanId] = useState<string>(loanId || '');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
   
   // Get all approved loans that haven't been fully repaid
   const approvedLoans = user?.loans?.filter((loan: any) => loan.status === 'approved') || [];
@@ -49,29 +39,13 @@ const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) 
       repaidAmount: repaidForThisLoan
     };
   }).filter(loan => loan.remainingBalance > 0);
-  
+
   // Set default selected loan
   useEffect(() => {
     if (loansWithBalance.length > 0 && !selectedLoanId) {
       setSelectedLoanId(loansWithBalance[0].id);
     }
   }, [loansWithBalance, selectedLoanId]);
-
-  // Refresh effect to update UI after repayment
-  useEffect(() => {
-    if (refreshTrigger > 0) {
-      // Force refresh data from localStorage
-      if (user?.email) {
-        try {
-          const userDataKey = `agriloan_userdata_${user.email}`;
-          localStorage.getItem(userDataKey);
-          console.log("Loan repayment data refreshed");
-        } catch (error) {
-          console.error("Error refreshing loan data:", error);
-        }
-      }
-    }
-  }, [refreshTrigger, user?.email]);
 
   const handleRepayLoan = async () => {
     if (!amount || parseFloat(amount) <= 0) {
@@ -126,10 +100,11 @@ const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) 
       }
       
       // Add repayment transaction
-      await addTransaction({
+      const transaction = await addTransaction({
         amount: numericAmount,
         type: "payment", 
         description: `Loan repayment for ${selectedLoanId}`,
+        status: "on_time"
       });
       
       // Update user's current balance
@@ -149,23 +124,51 @@ const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) 
             const prevAmountRepaid = loan.amountRepaid || 0;
             const totalRepaid = prevAmountRepaid + numericAmount;
             
-            // Check if loan is fully repaid and update status if it is
+            // Check if loan is fully repaid
             const isFullyRepaid = totalRepaid >= loan.amount;
             
-            // We need to cast the loan to ExtendedLoanApplication because we need to use 'repaid' status
             return {
               ...loan,
               paymentsMade: prevPaymentsMade + 1,
               amountRepaid: totalRepaid,
-              status: isFullyRepaid ? "repaid" as ExtendedLoanStatus : loan.status
-            } as ExtendedLoanApplication;
+              status: isFullyRepaid ? "repaid" : loan.status,
+              lastPaymentDate: new Date().toISOString()
+            };
           }
           return loan;
-        }) as ExtendedLoanApplication[];
+        });
         
-        // Cast the updated loans back to the format expected by updateUserData
-        await updateUserData({ loans: updatedLoans as any });
+        await updateUserData({ loans: updatedLoans });
       }
+
+      // Generate and download payment report
+      const paymentReport = {
+        transactionId: transaction.id,
+        date: new Date().toISOString(),
+        amount: numericAmount,
+        loanId: selectedLoanId,
+        loanType: selectedLoan.type,
+        remainingBalance: selectedLoan.remainingBalance - numericAmount,
+        status: "completed",
+        paymentMethod: "Online Banking",
+        receiptNumber: `RCPT-${Date.now()}`,
+        borrowerDetails: {
+          name: user?.name,
+          email: user?.email,
+          phone: user?.phone
+        }
+      };
+
+      // Create and download PDF report
+      const blob = new Blob([JSON.stringify(paymentReport, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `payment_receipt_${transaction.id}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
       
       // Update UI with toast
       uiToast({
@@ -180,12 +183,9 @@ const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) 
         });
       }
       
-      // Force refresh to update the UI
-      setRefreshTrigger(prev => prev + 1);
+      // Clear the amount input
       setAmount('');
       
-      // Force refresh data in localStorage to ensure all components see the update
-      refreshAllUserData();
     } catch (error) {
       console.error("Error processing repayment:", error);
       uiToast({
@@ -195,34 +195,6 @@ const LoanRepayment: React.FC<LoanRepaymentProps> = ({ loanId, defaultAmount }) 
       });
     } finally {
       setIsSubmitting(false);
-    }
-  };
-  
-  // Function to refresh all user data
-  const refreshAllUserData = () => {
-    if (user?.email) {
-      const userDataKey = `agriloan_userdata_${user.email}`;
-      const userData = localStorage.getItem(userDataKey);
-      if (userData) {
-        const parsedData = JSON.parse(userData);
-        // Make sure the updated data is saved back
-        localStorage.setItem(userDataKey, JSON.stringify(parsedData));
-      }
-    }
-    
-    // Also refresh all other users' data to ensure admins see updates
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith('agriloan_userdata_') && (!user?.email || !key.includes(user.email))) {
-        try {
-          const otherUserData = localStorage.getItem(key);
-          if (otherUserData) {
-            localStorage.setItem(key, JSON.stringify(otherUserData));
-          }
-        } catch (error) {
-          console.error("Error refreshing other user data:", error);
-        }
-      }
     }
   };
   

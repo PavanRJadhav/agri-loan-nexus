@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,6 +19,7 @@ const LoanVerificationPage: React.FC = () => {
     creditScore: number;
   }>>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   
   // Initial load and periodic refresh
   useEffect(() => {
@@ -131,6 +131,14 @@ const LoanVerificationPage: React.FC = () => {
     const loan = userData.loans.find((loan: any) => loan.id === loanId);
     if (!loan) return;
     
+    // Check if loan is already approved
+    if (loan.status === 'approved') {
+      toast.error("Loan already approved", {
+        description: "This loan has already been approved and processed."
+      });
+      return;
+    }
+    
     // Update the loan status
     const updatedLoans = userData.loans.map((loan: any) => 
       loan.id === loanId ? { ...loan, status: 'approved' } : loan
@@ -140,7 +148,8 @@ const LoanVerificationPage: React.FC = () => {
     const currentBalance = userData.financialData?.currentBalance || 0;
     const updatedFinancialData = {
       ...userData.financialData,
-      currentBalance: currentBalance + amount
+      currentBalance: currentBalance + amount,
+      loanAmount: (userData.financialData?.loanAmount || 0) + amount
     };
     
     // Create a disbursement transaction
@@ -151,6 +160,28 @@ const LoanVerificationPage: React.FC = () => {
       description: `Loan disbursement - ${loan.type} approved`,
       date: new Date().toISOString()
     };
+    
+    // Generate loan approval report
+    const approvalReport = {
+      loanId: loanId,
+      date: new Date().toISOString(),
+      amount: amount,
+      loanType: loan.type,
+      purpose: loan.purpose,
+      status: "approved",
+      transactionId: newTransaction.id
+    };
+
+    // Create and download PDF report
+    const blob = new Blob([JSON.stringify(approvalReport, null, 2)], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `loan_approval_${loanId}.json`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
     
     // Update user data with new transaction and financial data
     userData.loans = updatedLoans;
@@ -171,13 +202,8 @@ const LoanVerificationPage: React.FC = () => {
       email: userEmail
     });
     
-    // Remove from pending loans list
-    setPendingLoans(prevLoans => 
-      prevLoans.filter(item => !(item.userEmail === userEmail && item.loan.id === loanId))
-    );
-    
-    // Close dialog if open
-    setViewDetails(false);
+    // Refresh the page data
+    setRefreshTrigger(prev => prev + 1);
   };
   
   const handleRejectLoan = (userEmail: string, loanId: string) => {

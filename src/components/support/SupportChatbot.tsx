@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -91,24 +90,6 @@ const SupportChatbot: React.FC<SupportChatbotProps> = ({ selectedQuestion }) => 
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
-  
-  // Handle external question selection
-  useEffect(() => {
-    const handleExternalQuestion = (event: CustomEvent) => {
-      const question = event.detail;
-      if (question) {
-        handleUserMessage(question);
-      }
-    };
-
-    // Add event listener for custom event
-    window.addEventListener('chatQuestion' as any, handleExternalQuestion as EventListener);
-    
-    // Clean up
-    return () => {
-      window.removeEventListener('chatQuestion' as any, handleExternalQuestion as EventListener);
-    };
-  }, []);
   
   // Handle selected question from props
   useEffect(() => {

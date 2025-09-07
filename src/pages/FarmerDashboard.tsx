@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,29 +6,20 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { LoanApplication, Transaction, TransactionType, TransactionStatus } from "@/types/loans";
-import { IndianRupee, AlertCircle, CheckCircle, Calendar, CreditCard, ArrowLeft, Download } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LoanApplication, Transaction } from "@/types/loans";
+import { Download, RefreshCw, AlertCircle, CheckCircle, Calendar, CreditCard, IndianRupee } from "lucide-react";
 import { format } from "date-fns";
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
 
-// Extend jsPDF type to include autoTable
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: (options: any) => jsPDF;
-  }
-}
-
-const RepayLoanPage: React.FC = () => {
-  const navigate = useNavigate();
+const FarmerDashboard: React.FC = () => {
   const { user, addTransaction, updateUserData } = useAuth();
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("overview");
   const [repaymentAmount, setRepaymentAmount] = useState("");
   const [selectedLoanId, setSelectedLoanId] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "upi" | "card">("bank_transfer");
   const [minimumPayment, setMinimumPayment] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
 
   // Get all approved loans that haven't been fully repaid
   const approvedLoans = user?.loans?.filter((loan: LoanApplication) => loan.status === 'approved') || [];
@@ -44,21 +34,8 @@ const RepayLoanPage: React.FC = () => {
     const totalPaid = payments.reduce((sum: number, txn: Transaction) => sum + txn.amount, 0);
     const remainingBalance = Math.max(0, loan.amount - totalPaid);
     const paymentProgress = (totalPaid / loan.amount) * 100;
-    
-    // Fix date handling
-    let nextPaymentDue;
-    try {
-      nextPaymentDue = new Date(loan.submittedAt);
-      if (isNaN(nextPaymentDue.getTime())) {
-        // If submittedAt is invalid, use current date
-        nextPaymentDue = new Date();
-      }
-      nextPaymentDue.setMonth(nextPaymentDue.getMonth() + 1);
-    } catch (error) {
-      console.error('Error processing date:', error);
-      nextPaymentDue = new Date();
-      nextPaymentDue.setMonth(nextPaymentDue.getMonth() + 1);
-    }
+    const nextPaymentDue = new Date(loan.submittedAt);
+    nextPaymentDue.setMonth(nextPaymentDue.getMonth() + 1);
 
     // Calculate minimum payment (5% of remaining balance or ₹1000, whichever is higher)
     const minPayment = Math.max(remainingBalance * 0.05, 1000);
@@ -81,7 +58,6 @@ const RepayLoanPage: React.FC = () => {
       setSelectedLoanId(firstLoan.id);
       setMinimumPayment(firstLoan.minimumPayment);
     }
-    setIsLoading(false);
   }, [loansWithDetails, selectedLoanId]);
 
   // Update minimum payment when loan selection changes
@@ -91,13 +67,6 @@ const RepayLoanPage: React.FC = () => {
       setMinimumPayment(selectedLoan.minimumPayment);
     }
   }, [selectedLoanId, loansWithDetails]);
-
-  // Debug logging
-  useEffect(() => {
-    console.log('User:', user);
-    console.log('Approved Loans:', approvedLoans);
-    console.log('Loans with Details:', loansWithDetails);
-  }, [user, approvedLoans, loansWithDetails]);
 
   const validateRepaymentAmount = (amount: number, selectedLoan: any) => {
     if (amount < minimumPayment) {
@@ -130,61 +99,12 @@ const RepayLoanPage: React.FC = () => {
     return true;
   };
 
-  const generatePDFReport = (transaction: any, type: 'payment' | 'loan') => {
-    const doc = new jsPDF();
-    
-    // Add header
-    doc.setFontSize(20);
-    doc.text('Agri Loan Nexus', 105, 20, { align: 'center' });
-    doc.setFontSize(16);
-    doc.text(type === 'payment' ? 'Payment Receipt' : 'Loan Application Receipt', 105, 30, { align: 'center' });
-    
-    // Add transaction details
-    doc.setFontSize(12);
-    const details = [
-      ['Transaction ID', transaction.transactionId],
-      ['Date', format(new Date(transaction.date), 'MMM dd, yyyy')],
-      ['Amount', `₹${transaction.amount.toLocaleString()}`],
-      ['Type', type === 'payment' ? 'Loan Repayment' : 'Loan Application'],
-      ['Status', transaction.status],
-      ['Payment Method', transaction.paymentMethod || 'N/A'],
-      ['Loan ID', transaction.loanId],
-      ['Loan Type', transaction.loanType],
-      ['Remaining Balance', `₹${transaction.remainingBalance.toLocaleString()}`],
-    ];
-
-    // Add borrower details
-    doc.setFontSize(14);
-    doc.text('Borrower Details', 20, 50);
-    doc.setFontSize(12);
-    doc.text(`Name: ${transaction.borrowerDetails.name}`, 20, 60);
-    doc.text(`Email: ${transaction.borrowerDetails.email}`, 20, 70);
-
-    // Add transaction details table
-    doc.autoTable({
-      startY: 80,
-      head: [['Field', 'Value']],
-      body: details,
-      theme: 'grid',
-      headStyles: { fillColor: [41, 128, 185], textColor: 255 },
-      styles: { fontSize: 10, cellPadding: 5 },
-    });
-
-    // Add footer
-    const pageHeight = doc.internal.pageSize.height;
-    doc.setFontSize(10);
-    doc.text('This is a computer-generated document. No signature is required.', 105, pageHeight - 20, { align: 'center' });
-    
-    return doc;
-  };
-
   const handleRepayment = async () => {
     if (!repaymentAmount || parseFloat(repaymentAmount) <= 0) {
       toast({
         title: "Invalid amount",
         description: "Please enter a valid repayment amount",
-        variant: "destructive",
-        duration: 3000
+        variant: "destructive"
       });
       return;
     }
@@ -193,8 +113,7 @@ const RepayLoanPage: React.FC = () => {
       toast({
         title: "No loan selected",
         description: "Please select a loan to repay",
-        variant: "destructive",
-        duration: 3000
+        variant: "destructive"
       });
       return;
     }
@@ -216,18 +135,13 @@ const RepayLoanPage: React.FC = () => {
       }
 
       // Process payment
-      const transactionId = `txn-${Date.now()}`;
       const newTransaction: Omit<Transaction, "id" | "date"> = {
         amount,
         type: "payment",
         description: `Loan repayment for ${selectedLoanId}`,
-        status: "on_time",
-        loanId: selectedLoanId,
-        loanType: selectedLoan.type,
-        paymentMethod
+        status: "on_time"
       };
 
-      // Add transaction to user's transaction history
       await addTransaction(newTransaction);
 
       // Update user's balance
@@ -262,7 +176,7 @@ const RepayLoanPage: React.FC = () => {
 
       // Generate payment receipt
       const receipt = {
-        transactionId,
+        transactionId: `txn-${Date.now()}`,
         date: new Date().toISOString(),
         amount,
         loanId: selectedLoanId,
@@ -277,15 +191,21 @@ const RepayLoanPage: React.FC = () => {
         }
       };
 
-      // Generate and download PDF
-      const doc = generatePDFReport(receipt, 'payment');
-      doc.save(`payment_receipt_${transactionId}.pdf`);
+      // Download receipt
+      const blob = new Blob([JSON.stringify(receipt, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `payment_receipt_${receipt.transactionId}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
 
       // Show success message
       toast({
         title: "Payment successful",
-        description: `Successfully repaid ₹${amount.toLocaleString()} for your loan.`,
-        duration: 3000
+        description: `Successfully repaid ₹${amount.toLocaleString()} for your loan.`
       });
 
       // Clear form
@@ -296,145 +216,135 @@ const RepayLoanPage: React.FC = () => {
         toast({
           title: "Congratulations!",
           description: "You have fully repaid this loan.",
-          duration: 3000
+          variant: "default"
         });
       }
 
-      // Navigate back to dashboard
-      navigate('/dashboard');
+      // Refresh the page to update the UI
+      window.location.reload();
 
     } catch (error) {
       console.error("Error processing repayment:", error);
       toast({
         title: "Payment failed",
         description: "There was an error processing your payment. Please try again.",
-        variant: "destructive",
-        duration: 3000
+        variant: "destructive"
       });
     } finally {
       setIsProcessing(false);
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="container mx-auto py-8">
-        <div className="max-w-2xl mx-auto text-center">
-          <p>Loading loan information...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="container mx-auto py-8">
-        <div className="max-w-2xl mx-auto text-center">
-          <p>Please log in to access this page.</p>
-          <Button onClick={() => navigate('/login')} className="mt-4">
-            Go to Login
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="container mx-auto py-8">
-      <div className="max-w-2xl mx-auto space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => navigate('/dashboard')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
-          <h1 className="text-3xl font-bold">Repay Loan</h1>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Farmer Dashboard</h2>
+          <p className="text-muted-foreground">
+            Manage your loans and repayments
+          </p>
         </div>
+        <Button variant="outline" onClick={() => window.location.reload()}>
+          <RefreshCw className="mr-2 h-4 w-4" />
+          Refresh
+        </Button>
+      </div>
 
-        {loansWithDetails.length > 0 ? (
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Select Loan</CardTitle>
-                <CardDescription>
-                  Choose the loan you want to repay
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Select
-                  value={selectedLoanId}
-                  onValueChange={setSelectedLoanId}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a loan" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {loansWithDetails.map((loan) => (
-                      <SelectItem key={loan.id} value={loan.id}>
-                        {loan.type} - ₹{loan.remainingBalance.toLocaleString()} remaining
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </CardContent>
-            </Card>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="repayment">Make Payment</TabsTrigger>
+          <TabsTrigger value="history">Payment History</TabsTrigger>
+        </TabsList>
 
-            {selectedLoanId && (
-              <>
-                <Card>
+        <TabsContent value="overview" className="space-y-4">
+          {loansWithDetails.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              {loansWithDetails.map((loan) => (
+                <Card key={loan.id}>
                   <CardHeader>
-                    <CardTitle>Loan Details</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {(() => {
-                      const selectedLoan = loansWithDetails.find(loan => loan.id === selectedLoanId);
-                      if (!selectedLoan) return null;
-                      
-                      return (
-                        <div className="space-y-4">
-                          <div className="flex justify-between items-center">
-                            <span>Total Amount</span>
-                            <span className="font-medium">₹{selectedLoan.amount.toLocaleString()}</span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span>Amount Paid</span>
-                            <span className="font-medium">₹{selectedLoan.totalPaid.toLocaleString()}</span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span>Remaining Balance</span>
-                            <span className="font-medium">₹{selectedLoan.remainingBalance.toLocaleString()}</span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span>Next Payment Due</span>
-                            <span className="font-medium flex items-center gap-1">
-                              <Calendar className="h-4 w-4" />
-                              {selectedLoan.nextPaymentDue instanceof Date && !isNaN(selectedLoan.nextPaymentDue.getTime())
-                                ? format(selectedLoan.nextPaymentDue, 'MMM dd, yyyy')
-                                : 'Not available'}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span>Minimum Payment</span>
-                            <span className="font-medium">₹{selectedLoan.minimumPayment.toLocaleString()}</span>
-                          </div>
-                          <Progress value={selectedLoan.paymentProgress} className="h-2" />
-                          <div className="text-sm text-muted-foreground text-center">
-                            {selectedLoan.paymentProgress.toFixed(1)}% repaid
-                          </div>
-                        </div>
-                      );
-                    })()}
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Make Payment</CardTitle>
+                    <CardTitle>{loan.type}</CardTitle>
                     <CardDescription>
-                      Enter the amount you wish to repay
+                      Loan ID: {loan.id}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span>Total Amount</span>
+                        <span className="font-medium">₹{loan.amount.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span>Amount Paid</span>
+                        <span className="font-medium">₹{loan.totalPaid.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span>Remaining Balance</span>
+                        <span className="font-medium">₹{loan.remainingBalance.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span>Next Payment Due</span>
+                        <span className="font-medium flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          {format(loan.nextPaymentDue, 'MMM dd, yyyy')}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span>Minimum Payment</span>
+                        <span className="font-medium">₹{loan.minimumPayment.toLocaleString()}</span>
+                      </div>
+                      <Progress value={loan.paymentProgress} className="h-2" />
+                      <div className="text-sm text-muted-foreground text-center">
+                        {loan.paymentProgress.toFixed(1)}% repaid
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="py-8 text-center">
+                <p className="text-muted-foreground">No active loans found</p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="repayment" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Make a Payment</CardTitle>
+              <CardDescription>
+                Select a loan and enter the amount you wish to repay
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loansWithDetails.length > 0 ? (
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="loan-select" className="text-sm font-medium block mb-1">
+                      Select Loan
+                    </label>
+                    <Select
+                      value={selectedLoanId}
+                      onValueChange={setSelectedLoanId}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a loan" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {loansWithDetails.map((loan) => (
+                          <SelectItem key={loan.id} value={loan.id}>
+                            {loan.type} - ₹{loan.remainingBalance.toLocaleString()} remaining
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {selectedLoanId && (
+                    <>
                       <div>
                         <label htmlFor="amount" className="text-sm font-medium block mb-1">
                           Repayment Amount (₹)
@@ -501,29 +411,71 @@ const RepayLoanPage: React.FC = () => {
                       >
                         {isProcessing ? "Processing..." : "Make Payment"}
                       </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </>
-            )}
-          </div>
-        ) : (
-          <Card>
-            <CardContent className="py-8 text-center">
-              <p className="text-muted-foreground">No active loans available for repayment</p>
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => navigate('/dashboard')}
-              >
-                Back to Dashboard
-              </Button>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <p className="text-center py-4 text-muted-foreground">
+                  No active loans available for repayment
+                </p>
+              )}
             </CardContent>
           </Card>
-        )}
-      </div>
+        </TabsContent>
+
+        <TabsContent value="history" className="space-y-4">
+          {loansWithDetails.length > 0 ? (
+            <div className="space-y-4">
+              {loansWithDetails.map((loan) => (
+                <Card key={loan.id}>
+                  <CardHeader>
+                    <CardTitle>{loan.type}</CardTitle>
+                    <CardDescription>
+                      Payment history for loan ID: {loan.id}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {loan.payments.length > 0 ? (
+                      <div className="space-y-4">
+                        {loan.payments.map((payment, index) => (
+                          <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                            <div>
+                              <p className="font-medium">₹{payment.amount.toLocaleString()}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {format(new Date(payment.date), 'MMM dd, yyyy')}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {payment.status === "on_time" ? (
+                                <CheckCircle className="h-4 w-4 text-green-500" />
+                              ) : (
+                                <AlertCircle className="h-4 w-4 text-yellow-500" />
+                              )}
+                              <span className="text-sm">{payment.status}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-center py-4 text-muted-foreground">
+                        No payment history available
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="py-8 text-center">
+                <p className="text-muted-foreground">No loan history available</p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
 
-export default RepayLoanPage;
+export default FarmerDashboard; 
