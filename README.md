@@ -73,19 +73,19 @@ Agri-Loan-Nexus/
     └── package.json
 
 
-## ⚙️ Setup Instructions  
-# Clone the repository
+# ⚙️ Setup Instructions  
+ Clone the repository
 git clone https://github.com/PavanRJadhav/agri-loan-nexus.git
 
-# Move into the project folder
+ Move into the project folder
 cd agri-loan-nexus
 
-# Backend (Server)
+ Backend (Server)
 cd server
 npm install
 npm run start   # or: npm run dev (with nodemon)
 
-# Frontend (Client)
+ Frontend (Client)
 cd ../client
 npm install
 npm run dev
