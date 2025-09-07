@@ -2,21 +2,12 @@
 
 An AI-enabled agricultural credit management system designed to bridge the loan access gap for small and marginal farmers. This platform empowers rural communities with **transparent loan applications, AI-powered credit scoring, multilingual support, and real-time loan tracking**.  
 
----
-
-## 🚀 Live Demo  
-👉 [Add your deployed link here]  
-
----
-
 ## ✨ Overview  
 
 Agri Loan Nexus is a **full-stack web application** built with a **React + Vite frontend** and a **Node.js backend**.  
 It digitizes the loan lifecycle—from **application to disbursement**—with features like credit scoring, subsidy integration, and AI chatbot assistance.  
 
 This platform simplifies institutional credit access for farmers, reduces dependency on moneylenders, and aligns with national missions like **Digital India** and **Atmanirbhar Bharat**.  
-
----
 
 ## 📑 Table of Contents  
 - [Features](#-features)  
@@ -68,7 +59,7 @@ This platform simplifies institutional credit access for farmers, reduces depend
 
 ## 📂 Project Structure  
 
-```bash
+bash
 Agri-Loan-Nexus/
 ├── client/            # React frontend (Vite + Tailwind)
 │   ├── src/
@@ -82,34 +73,40 @@ Agri-Loan-Nexus/
     ├── server.js
     └── package.json
 
-
-⚙️ Setup Instructions
-
----
-
 ## ⚙️ Setup Instructions  
 
 ### 1. Clone the Repository  
-```bash
+bash
+# Clone the repository
 git clone https://github.com/PavanRJadhav/agri-loan-nexus.git
+
+# Move into the project folder
 cd agri-loan-nexus
 
 
 2. Backend (Server)
+# Navigate to the server folder
 cd server
+
+# Install dependencies
 npm install
-# configure .env (see below)
-npm run start   # or: npm run dev
+
+# Start the server
+npm run start   # or: npm run dev (with nodemon)
 
 
 3. Frontend (Client)
+# Navigate to the client folder
 cd ../client
+
+# Install dependencies
 npm install
+
+# Start the development server
 npm run dev
 
 
 🔐 Environment Variables
-Server (server/.env)
 PORT=5000
 DATABASE_URL=your_postgres_url
 SUPABASE_KEY=your_supabase_key
@@ -117,51 +114,57 @@ AADHAAR_API_KEY=your_aadhaar_key
 UPI_API_KEY=your_upi_key
 JWT_SECRET=your_secret
 
+### Client  
+Handled via Vite environment variables.  
 
-Client
-Handled via Vite environment variables.
-
-📜 Scripts
-Backend
- npm run start – Start the server
- npm run dev – Start with nodemon
-
-Frontend
- npm run dev – Start Vite dev server
- npm run build – Build for production
- npm run preview – Preview production build
-
-📡 API Endpoints
-| Endpoint        | Method | Description                   |
-| --------------- | ------ | ----------------------------- |
-| `/api/farmers`  | CRUD   | Farmer registration & profile |
-| `/api/loans`    | CRUD   | Loan application & tracking   |
-| `/api/verifier` | CRUD   | Verifier actions              |
-| `/api/admin`    | CRUD   | Admin dashboard + analytics   |
-| `/api/chatbot`  | POST   | AI chatbot responses          |
-
-🤝 Contribution Guidelines
-1.Fork the repo
-2.Create your branch (git checkout -b feature/new-feature)
-3.Commit changes (git commit -m 'Add feature')
-4.Push branch (git push origin feature/new-feature)
-5.Open a Pull Request
-
-🐞 Troubleshooting
-  Database not connecting → Check DATABASE_URL in .env
-  API errors → Ensure Aadhaar/UPI API keys are correct
-  Auth issues → Verify Supabase keys
-  Port in use → Change PORT in .env
-
-📜 License
-This project is licensed under the ISC License.
-
-👨‍💻 Authors
- PavanRJadhav                                                                                 
 ---
 
-✅ Copy-paste this **entire block** into your `README.md`.  
-When you push it to GitHub, it will render perfectly with **headings, tables, code blocks, and author section at the end**.  
+## 📜 Scripts  
 
-Do you also want me to add a **📸 Screenshots section (with placeholders)** so you can drop in the farmer dashboard, chatbot, and admin dashboard images from your report?
+### Backend  
+- `npm run start` – Start the server  
+- `npm run dev` – Start with nodemon  
 
+### Frontend  
+- `npm run dev` – Start Vite dev server  
+- `npm run build` – Build for production  
+- `npm run preview` – Preview production build  
+
+---
+
+## 📡 API Endpoints  
+
+| Endpoint       | Method | Description                   |
+|----------------|--------|-------------------------------|
+| `/api/farmers` | CRUD   | Farmer registration & profile |
+| `/api/loans`   | CRUD   | Loan application & tracking   |
+| `/api/verifier`| CRUD   | Verifier actions              |
+| `/api/admin`   | CRUD   | Admin dashboard + analytics   |
+| `/api/chatbot` | POST   | AI chatbot responses          |
+
+---
+
+## 🤝 Contribution Guidelines  
+1. Fork the repo  
+2. Create your branch (`git checkout -b feature/new-feature`)  
+3. Commit changes (`git commit -m 'Add feature'`)  
+4. Push branch (`git push origin feature/new-feature`)  
+5. Open a Pull Request  
+
+---
+
+## 🐞 Troubleshooting  
+- **Database not connecting** → Check `DATABASE_URL` in `.env`  
+- **API errors** → Ensure Aadhaar/UPI API keys are correct  
+- **Auth issues** → Verify Supabase keys  
+- **Port in use** → Change `PORT` in `.env`  
+
+---
+
+## 📜 License  
+This project is licensed under the **ISC License**.  
+
+---
+
+## 👨‍💻 Authors  
+-     PavanRJadhav
