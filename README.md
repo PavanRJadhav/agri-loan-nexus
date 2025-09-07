@@ -96,14 +96,16 @@ cd ../client
 npm install
 npm run dev
 ```
+## 🔐 Environment Variables  
 
-🔐 Environment Variables
+```env
 PORT=5000
 DATABASE_URL=your_postgres_url
 SUPABASE_KEY=your_supabase_key
 AADHAAR_API_KEY=your_aadhaar_key
 UPI_API_KEY=your_upi_key
 JWT_SECRET=your_secret
+```
 
 ---
 
