@@ -55,11 +55,10 @@ This platform simplifies institutional credit access for farmers, reduces depend
 - UPI/e-RUPI APIs  
 - Jest & Postman (testing)  
 
----
-
+--- 
 ## 📂 Project Structure  
 
-bash
+``bash
 Agri-Loan-Nexus/
 ├── client/            # React frontend (Vite + Tailwind)
 │   ├── src/
@@ -73,38 +72,23 @@ Agri-Loan-Nexus/
     ├── server.js
     └── package.json
 
-## ⚙️ Setup Instructions  
 
-### 1. Clone the Repository  
-bash
+## ⚙️ Setup Instructions  
 # Clone the repository
 git clone https://github.com/PavanRJadhav/agri-loan-nexus.git
 
 # Move into the project folder
 cd agri-loan-nexus
 
-
-2. Backend (Server)
-# Navigate to the server folder
+# Backend (Server)
 cd server
-
-# Install dependencies
 npm install
-
-# Start the server
 npm run start   # or: npm run dev (with nodemon)
 
-
-3. Frontend (Client)
-# Navigate to the client folder
+# Frontend (Client)
 cd ../client
-
-# Install dependencies
 npm install
-
-# Start the development server
 npm run dev
-
 
 🔐 Environment Variables
 PORT=5000
@@ -113,6 +97,7 @@ SUPABASE_KEY=your_supabase_key
 AADHAAR_API_KEY=your_aadhaar_key
 UPI_API_KEY=your_upi_key
 JWT_SECRET=your_secret
+
 
 ### Client  
 Handled via Vite environment variables.  
