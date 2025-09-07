@@ -1,73 +1,131 @@
-# Welcome to your Lovable project
+🌱 Agri Loan Nexus
 
-## Project info
+An AI-enabled agricultural credit management system designed to bridge the loan access gap for small and marginal farmers. This platform empowers rural communities with transparent loan applications, AI-powered credit scoring, multilingual support, and real-time loan tracking.
 
-**URL**: https://lovable.dev/projects/5f619029-6e93-4107-81e5-481ec8831331
+✨ Overview
 
-## How can I edit this code?
+Agri Loan Nexus is a full-stack web application built with a React + Vite frontend and a Node.js backend. It digitizes the loan lifecycle—from application to disbursement—with features like credit scoring, subsidy integration, and AI chatbot assistance.
 
-There are several ways of editing your application.
+This platform simplifies institutional credit access for farmers, reduces dependency on moneylenders, and aligns with national missions like Digital India and Atmanirbhar Bharat.
 
-**Use Lovable**
+📑 Table of Contents
+Features
+Tech Stack
+Screenshots
+Project Structure
+Setup Instructions
+Environment Variables
+Scripts
+API Endpoints
+Contribution Guidelines
+Troubleshooting
+License
+Authors
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/5f619029-6e93-4107-81e5-481ec8831331) and start prompting.
+🔑 Features
+User Authentication – Farmers, verifiers, and admins with role-based access.
+AI-Powered Credit Scoring – ML models to assess eligibility & assign credit limits.
+Loan Management – Apply, track, and manage loans in real-time.
+Smart Credit Card Module – Virtual QR/NFC-enabled e-credit cards for purchases.
+Subsidy Integration – Auto-apply eligible subsidies during transactions.
+Multilingual Support – Regional language & chatbot assistance.
+Dashboards – Farmers, Verifiers, and Admin dashboards with analytics.
+Payment & Transactions – Secure payments via UPI/e-RUPI APIs.
+Responsive Design – Built with React + Tailwind CSS for mobile and desktop.
 
-Changes made via Lovable will be committed automatically to this repo.
+🛠️ Tech Stack
+Frontend
+ React (Vite)
+ Tailwind CSS
+ React Router DOM
+ Axios
+ Dialogflow/OpenAI (Chatbot)
 
-**Use your preferred IDE**
+Backend
+ Node.js + Express
+ Supabase (Auth + Realtime DB)
+ PostgreSQL
+ Firebase (sync)
+ Aadhaar API (eKYC)
+ UPI/e-RUPI APIs
+ Jest & Postman (testing)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+📂 Project Structure
+Agri-Loan-Nexus/
+├── client/            # React frontend (Vite + Tailwind)
+│   ├── src/
+│   ├── public/
+│   └── package.json
+└── server/            # Node.js backend
+    ├── config/
+    ├── controllers/
+    ├── routes/
+    ├── models/
+    ├── server.js
+    └── package.json
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+⚙️ Setup Instructions
+1. Clone the Repository
+git clone https://github.com/your-username/agri-loan-nexus.git
+cd agri-loan-nexus
 
-Follow these steps:
+2. Backend (Server)
+cd server
+npm install
+# configure .env (see below)
+npm run start   # or: npm run dev
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+3. Frontend (Client)
+cd ../client
+npm install
 npm run dev
-```
 
-**Edit a file directly in GitHub**
+🔐 Environment Variables
+Server (server/.env)
+PORT=5000
+DATABASE_URL=your_postgres_url
+SUPABASE_KEY=your_supabase_key
+AADHAAR_API_KEY=your_aadhaar_key
+UPI_API_KEY=your_upi_key
+JWT_SECRET=your_secret
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Client
 
-**Use GitHub Codespaces**
+Handled via Vite environment variables.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+📜 Scripts
+Backend
+ npm run start – Start the server
+ npm run dev – Start with nodemon
 
-## What technologies are used for this project?
+Frontend
+ npm run dev – Start Vite dev server
+ npm run build – Build for production
+ npm run preview – Preview production build
 
-This project is built with:
+📡 API Endpoints
+Endpoint	   Method 	Description
+/api/farmers	CRUD	 Farmer registration & profile
+/api/loans	  CRUD	 Loan application & tracking
+/api/verifier	CRUD	 Verifier actions
+/api/admin	  CRUD	 Admin dashboard + analytics
+/api/chatbot	POST	 AI chatbot responses
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+🤝 Contribution Guidelines
+1.Fork the repo
+2.Create your branch (git checkout -b feature/new-feature)
+3.Commit changes (git commit -m 'Add feature')
+4.Push branch (git push origin feature/new-feature)
+5.Open a Pull Request
 
-## How can I deploy this project?
+🐞 Troubleshooting
+  Database not connecting → Check DATABASE_URL in .env
+  API errors → Ensure Aadhaar/UPI API keys are correct
+  Auth issues → Verify Supabase keys
+  Port in use → Change PORT in .env
 
-Simply open [Lovable](https://lovable.dev/projects/5f619029-6e93-4107-81e5-481ec8831331) and click on Share -> Publish.
+📜 License
+This project is licensed under the ISC License.
 
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+👨‍💻 Authors
+ PavanRJadhav
