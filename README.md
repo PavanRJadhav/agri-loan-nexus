@@ -21,7 +21,6 @@ This platform simplifies institutional credit access for farmers, reduces depend
 ## 📑 Table of Contents  
 - [Features](#-features)  
 - [Tech Stack](#-tech-stack)  
-- [Screenshots](#-screenshots)  
 - [Project Structure](#-project-structure)  
 - [Setup Instructions](#-setup-instructions)  
 - [Environment Variables](#-environment-variables)  
@@ -68,6 +67,8 @@ This platform simplifies institutional credit access for farmers, reduces depend
 ---
 
 ## 📂 Project Structure  
+
+```bash
 Agri-Loan-Nexus/
 ├── client/            # React frontend (Vite + Tailwind)
 │   ├── src/
@@ -80,6 +81,7 @@ Agri-Loan-Nexus/
     ├── models/
     ├── server.js
     └── package.json
+
 
 ⚙️ Setup Instructions
 
@@ -155,4 +157,11 @@ Frontend
 This project is licensed under the ISC License.
 
 👨‍💻 Authors
- PavanRJadhav
+ PavanRJadhav                                                                                 
+---
+
+✅ Copy-paste this **entire block** into your `README.md`.  
+When you push it to GitHub, it will render perfectly with **headings, tables, code blocks, and author section at the end**.  
+
+Do you also want me to add a **📸 Screenshots section (with placeholders)** so you can drop in the farmer dashboard, chatbot, and admin dashboard images from your report?
+
